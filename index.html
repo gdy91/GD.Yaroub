@@ -8,23 +8,103 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Almarai&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Almarai', sans-serif; background: linear-gradient(to right, #1d1f2f, #3e206d); color: white; margin: 0; }
-    header { background: #111; padding: 1rem; text-align: center; font-size: 2rem; letter-spacing: 2px; box-shadow: 0 0 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 1000; }
-    .container { max-width: 900px; margin: 2rem auto; background: #2b2d42; padding: 2rem; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-    input, textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: none; border-radius: 6px; font-size: 1rem; background: #fff; color: #000; }
-    button { background: #ff4081; color: white; padding: 0.6rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 0.3rem; transition: transform 0.2s ease; }
-    button:hover { transform: scale(1.05); background: #f50057; }
-    .task { background: #393b54; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; position: relative; }
-    .note { background: #202233; padding: 0.6rem; margin-top: 0.5rem; border-left: 4px solid #ff4081; display: flex; justify-content: space-between; align-items: center; }
-    .note span { flex: 1; }
-    .attachment { margin-top: 0.5rem; display: block; color: #ff79c6; text-decoration: underline; }
-    #archiveBtn { position: fixed; left: 20px; top: 20px; z-index: 2000; background: #00adb5; }
-    .filters { display: flex; gap: 10px; margin-bottom: 1rem; }
-    .stats { text-align: center; font-size: 1rem; margin-bottom: 1rem; }
+    body {
+      font-family: 'Almarai', sans-serif;
+      background: linear-gradient(to bottom right, #1f1c2c, #928dab);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #0f0f0f;
+      padding: 1rem;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+    }
+    .container {
+      max-width: 960px;
+      margin: 3rem auto;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      background: #eee;
+      color: #111;
+    }
+    button {
+      background: #ff4081;
+      color: #fff;
+      padding: 0.8rem 1.6rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s ease-in-out;
+    }
+    button:hover {
+      background: #f50057;
+      transform: scale(1.05);
+    }
+    .task {
+      background: rgba(0, 0, 0, 0.2);
+      border-left: 5px solid #ff4081;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .note {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.7rem;
+      border-left: 3px solid #00adb5;
+      margin-top: 0.5rem;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .note span {
+      flex: 1;
+    }
+    .attachment {
+      color: #ffd700;
+      margin-top: 0.4rem;
+      display: inline-block;
+    }
+    #archiveBtn {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      background: #00adb5;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      z-index: 100;
+    }
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <header><img src="/mnt/data/a822f289-4d3f-4cb8-803f-08e861b4de2b.png" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;">نظام GD.Yaroub</header>
+  <header><img src="/mnt/data/a822f289-4d3f-4cb8-803f-08e861b4de2b.png" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;"> <span style="vertical-align: middle;">نظام GD.Yaroub</span></header>
   <button id="archiveBtn" onclick="toggleArchive()">📁 عرض الأرشيف</button>
 
   <div class="container" id="login">
