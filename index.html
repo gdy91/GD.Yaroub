@@ -6,32 +6,46 @@
   <title>GD.Yaroub | نظام إدارة المهام</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       font-family: 'Cairo', sans-serif;
       background-color: #0f101a;
       color: #e0e0e0;
-      display: flex;
       height: 100vh;
-      overflow: hidden;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      grid-template-rows: 60px 1fr;
+      grid-template-areas:
+        "sidebar header"
+        "sidebar main";
+    }
+    header {
+      grid-area: header;
+      background: linear-gradient(to left, #6a11cb, #2575fc);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
     .sidebar {
-      width: 250px;
+      grid-area: sidebar;
       background: #161722;
-      padding: 1.5rem;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
       border-left: 1px solid #2c2f3e;
     }
     .sidebar img {
+      width: 100%;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,255,128,0.3);
-    }
-    .sidebar h2 {
-      font-size: 1.1rem;
-      color: #8cbaff;
-      margin: 1rem 0;
     }
     .sidebar div {
       background: #1e2130;
@@ -43,26 +57,39 @@
     .sidebar div:hover {
       background: #2a2f4c;
     }
-    .content {
-      flex: 1;
+    main {
+      grid-area: main;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .task-form {
+      background: #1e2130;
+      padding: 1rem;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
     }
-    header {
-      background: linear-gradient(to left, #6a11cb, #2575fc);
-      padding: 1rem 2rem;
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: #ffffff;
-      border-bottom: 1px solid #2c2f3e;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .task-form input,
+    .task-form textarea {
+      background: #2a2c3f;
+      color: white;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 5px;
+    }
+    .task-form button {
+      background: #5c6bc0;
+      color: white;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
     }
     .kanban {
       display: flex;
       gap: 1rem;
-      padding: 2rem;
       overflow-x: auto;
     }
     .column {
@@ -72,275 +99,130 @@
       padding: 1rem;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .column h3 {
       margin-bottom: 1rem;
-      color: #ffffff;
-      font-size: 1.1rem;
     }
     .task {
       background: #26293d;
       padding: 1rem;
       border-radius: 8px;
       margin-bottom: 1rem;
-      transition: transform 0.2s ease;
-    }
-    .task:hover {
-      transform: scale(1.02);
-    }
-    .task strong {
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    .task p {
-      font-size: 0.9rem;
-      color: #bbb;
     }
     .task-footer {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-top: 0.5rem;
       display: flex;
       justify-content: space-between;
-      margin-top: 0.5rem;
-      font-size: 0.8rem;
-      color: #999;
     }
     .task-actions {
-      margin-top: 0.7rem;
       display: flex;
-      justify-content: space-between;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
     }
     .task-actions button {
+      flex: 1;
       background: #3949ab;
-      color: white;
-      border: none;
-      padding: 0.4rem 0.6rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: 0.2s;
-    }
-    .task-actions button:hover {
-      background: #536dfe;
-    }
-    .chat-box {
-      position: absolute;
-      left: 20px;
-      bottom: 20px;
-      background: #222434;
-      padding: 1rem;
-      border-radius: 10px;
-      width: 280px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-    .chat-box h4 {
-      margin-top: 0;
-      color: #8cbaff;
-    }
-    .chat-box textarea {
-      width: 100%;
-      height: 60px;
-      border: none;
-      border-radius: 6px;
-      padding: 0.5rem;
-      resize: none;
-      background: #2a2c3f;
-      color: #fff;
-    }
-    .chat-box button {
-      margin-top: 0.5rem;
-      width: 100%;
-      background: #5c6bc0;
-      color: white;
       border: none;
       padding: 0.4rem;
-      border-radius: 6px;
+      border-radius: 5px;
+      color: white;
       cursor: pointer;
     }
   </style>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js">function addTask() {
-  const title = document.getElementById('task-title').value;
-  const details = document.getElementById('task-details').value;
-  if (!title || !details) return alert('يرجى إدخال العنوان والتفاصيل');
-  const column = document.querySelector('.column');
-  const task = document.createElement('div');
-  task.className = 'task';
-  task.innerHTML = `
-    <strong>${title}</strong>
-    <p>${details}</p>
-    <div class='task-footer'>
-      <span>أنت</span>
-      <span>${new Date().toLocaleDateString('ar')}</span>
-    </div>
-    <div class='task-actions'>
-      <button>✏️ تعديل</button>
-      <button>🗑️ حذف</button>
-      <button>💬 تعليق</button>
-    </div>`;
-  column.appendChild(task);
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-details').value = '';
-}
-
-function navigate(section) {
-  alert(`فتح قسم: ${section}`);
-}
-function addTask() {
-  const title = document.getElementById('task-title').value;
-  const details = document.getElementById('task-details').value;
-  if (!title || !details) return alert('يرجى إدخال العنوان والتفاصيل');
-  const column = document.querySelector('.column');
-  const task = document.createElement('div');
-  task.className = 'task';
-  task.innerHTML = `
-    <strong>${title}</strong>
-    <p>${details}</p>
-    <div class='task-footer'>
-      <span>أنت</span>
-      <span>${new Date().toLocaleDateString('ar')}</span>
-    </div>
-    <div class='task-actions'>
-      <button onclick="editTask(this)">✏️ تعديل</button>
-      <button onclick="deleteTask(this)">🗑️ حذف</button>
-      <button onclick="commentTask(this)">💬 تعليق</button>
-    </div>`;
-  column.appendChild(task);
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-details').value = '';
-}
-
-function deleteTask(button) {
-  if (confirm('هل أنت متأكد من حذف المهمة؟')) {
-    button.closest('.task').remove();
-  }
-}
-
-function editTask(button) {
-  const task = button.closest('.task');
-  const title = prompt('تعديل العنوان:', task.querySelector('strong').innerText);
-  const details = prompt('تعديل التفاصيل:', task.querySelector('p').innerText);
-  if (title) task.querySelector('strong').innerText = title;
-  if (details) task.querySelector('p').innerText = details;
-}
-
-function commentTask(button) {
-  const comment = prompt('أدخل تعليقك:');
-  if (comment) alert(`✅ تم تسجيل تعليقك: "${comment}"`);
-}
-</script>
 </head>
 <body>
-  <div class="sidebar" id="sidebar">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" width="100%">
-    <h2>القائمة</h2>
+  <div class="sidebar">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg">
     <div onclick="navigate('projects')">📁 المشاريع</div>
     <div onclick="navigate('tasks')">🧾 المهام</div>
     <div onclick="navigate('team')">👥 الفريق</div>
     <div onclick="navigate('calendar')">📅 مواعيد</div>
     <div onclick="navigate('reports')">📊 تقارير</div>
     <div onclick="navigate('settings')">⚙️ الإعدادات</div>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" width="100%">
-    <h2>القائمة</h2>
-    <div>📁 المشاريع</div>
-    <div>🧾 المهام</div>
-    <div>👥 الفريق</div>
-    <div>📅 مواعيد</div>
-    <div>📊 تقارير</div>
-    <div>⚙️ الإعدادات</div>
   </div>
-  <div class="content">
-    <div id="add-task-form" style="padding: 1rem; background:#1e2130; display: flex; flex-direction: column; gap: 0.5rem;">
-      <input id="task-title" type="text" placeholder="عنوان التكليف" style="padding: 0.5rem; border-radius: 5px; border:none; background:#2a2c3f; color:white;">
-      <textarea id="task-details" placeholder="تفاصيل المهمة..." style="padding: 0.5rem; border-radius: 5px; border:none; background:#2a2c3f; color:white;"></textarea>
-      <button onclick="addTask()" style="background:#5c6bc0; color:white; padding:0.5rem; border:none; border-radius:6px; cursor:pointer;">➕ إضافة المهمة</button>
+  <header>
+    نظام متابعة المهام - GD.Yaroub
+  </header>
+  <main>
+    <div class="task-form">
+      <input id="task-title" type="text" placeholder="عنوان المهمة">
+      <textarea id="task-details" placeholder="تفاصيل المهمة"></textarea>
+      <button onclick="addTask()">➕ إضافة المهمة</button>
     </div>
-    <header>
-      نظام متابعة المهام - GD.Yaroub
-      <span style="font-size: 0.9rem; font-weight: normal;">لوحة إدارية تفاعلية بإبداع فانتازي ✨</span>
-    </header>
     <div class="kanban">
       <div class="column">
         <h3>📋 جاري العمل</h3>
         <div class="task">
-          <strong>تصميم الهوية البصرية</strong>
-          <p>تحضير خطوط وألوان وإعداد دليل استخدام</p>
+          <strong>مهمة تجريبية</strong>
+          <p>وصف المهمة هنا...</p>
           <div class="task-footer">
             <span>يعرب</span>
             <span>2025/05/16</span>
           </div>
           <div class="task-actions">
-            <button>✏️ تعديل</button>
-            <button>🗑️ حذف</button>
-            <button>💬 تعليق</button>
+            <button onclick="editTask(this)">✏️ تعديل</button>
+            <button onclick="deleteTask(this)">🗑️ حذف</button>
+            <button onclick="commentTask(this)">💬 تعليق</button>
           </div>
         </div>
       </div>
       <div class="column">
         <h3>✅ تم</h3>
-        <div class="task">
-          <strong>إنهاء عرض تقديمي</strong>
-          <p>عرض فيديو للحملة التسويقية لشهر رمضان</p>
-          <div class="task-footer">
-            <span>ريم</span>
-            <span>2025/05/15</span>
-          </div>
-          <div class="task-actions">
-            <button>✏️ تعديل</button>
-            <button>🗑️ حذف</button>
-            <button>📥 أرشفة</button>
-          </div>
-        </div>
       </div>
       <div class="column">
         <h3>⏸️ معلق</h3>
-        <div class="task">
-          <strong>مراجعة سياسة النشر</strong>
-          <p>تعديل آلية الموافقات وتوثيق الصلاحيات</p>
-          <div class="task-footer">
-            <span>يزن</span>
-            <span>2025/05/10</span>
-          </div>
-          <div class="task-actions">
-            <button>✏️ تعديل</button>
-            <button>🗑️ حذف</button>
-            <button>💬 تعليق</button>
-          </div>
-        </div>
       </div>
     </div>
-    <div class="chat-box">
-      <h4>🧠 اقتراح فوري</h4>
-      <textarea placeholder="اكتب فكرة، ملاحظة، أو تعليق..."></textarea>
-      <button onclick="alert('✅ تم إرسال الاقتراح بنجاح')">أرسل الآن</button>
-    </div>
-  </div>
-<script>
-  // Enable drag & drop
-  document.querySelectorAll('.kanban .column').forEach(column => {
-    new Sortable(column, {
-      group: 'tasks',
-      animation: 150,
-      ghostClass: 'ghost',
-      draggable: '.task'
-    });
-  });
+  </main>
+  <script>
+    function addTask() {
+      const title = document.getElementById('task-title').value;
+      const details = document.getElementById('task-details').value;
+      if (!title || !details) return alert('يرجى تعبئة كل الحقول');
+      const column = document.querySelector('.column');
+      const task = document.createElement('div');
+      task.className = 'task';
+      task.innerHTML = `
+        <strong>${title}</strong>
+        <p>${details}</p>
+        <div class='task-footer'>
+          <span>أنت</span>
+          <span>${new Date().toLocaleDateString('ar')}</span>
+        </div>
+        <div class='task-actions'>
+          <button onclick="editTask(this)">✏️ تعديل</button>
+          <button onclick="deleteTask(this)">🗑️ حذف</button>
+          <button onclick="commentTask(this)">💬 تعليق</button>
+        </div>`;
+      column.appendChild(task);
+      document.getElementById('task-title').value = '';
+      document.getElementById('task-details').value = '';
+    }
 
-  // Simulated real-time notification
-  setInterval(() => {
-    const notif = document.createElement('div');
-    notif.textContent = '🔔 مهمة جديدة قيد الإضافة...';
-    notif.style.cssText = 'position:fixed;top:20px;left:20px;background:#222;color:#fff;padding:10px 15px;border-radius:8px;z-index:1000;font-size:14px;box-shadow:0 0 10px #000;';
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 3000);
-  }, 30000);
+    function deleteTask(button) {
+      if (confirm('هل تريد حذف هذه المهمة؟')) {
+        button.closest('.task').remove();
+      }
+    }
 
-  // Suggest task assignment
-  function suggestTask() {
-    const columns = document.querySelectorAll('.column');
-    const tasks = [...document.querySelectorAll('.task')];
-    const random = tasks[Math.floor(Math.random() * tasks.length)];
-    if (random) random.style.border = '2px dashed #00fca8';
-  }
-  setTimeout(suggestTask, 10000);
-</script>
+    function editTask(button) {
+      const task = button.closest('.task');
+      const newTitle = prompt('عنوان جديد:', task.querySelector('strong').innerText);
+      const newDetails = prompt('تفاصيل جديدة:', task.querySelector('p').innerText);
+      if (newTitle) task.querySelector('strong').innerText = newTitle;
+      if (newDetails) task.querySelector('p').innerText = newDetails;
+    }
+
+    function commentTask(button) {
+      const comment = prompt('تعليقك:');
+      if (comment) alert('✅ تم تسجيل تعليقك.');
+    }
+
+    function navigate(section) {
+      alert('انتقلت إلى قسم: ' + section);
+    }
+  </script>
 </body>
 </html>
