@@ -157,10 +157,87 @@
       cursor: pointer;
     }
   </style>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js">function addTask() {
+  const title = document.getElementById('task-title').value;
+  const details = document.getElementById('task-details').value;
+  if (!title || !details) return alert('يرجى إدخال العنوان والتفاصيل');
+  const column = document.querySelector('.column');
+  const task = document.createElement('div');
+  task.className = 'task';
+  task.innerHTML = `
+    <strong>${title}</strong>
+    <p>${details}</p>
+    <div class='task-footer'>
+      <span>أنت</span>
+      <span>${new Date().toLocaleDateString('ar')}</span>
+    </div>
+    <div class='task-actions'>
+      <button>✏️ تعديل</button>
+      <button>🗑️ حذف</button>
+      <button>💬 تعليق</button>
+    </div>`;
+  column.appendChild(task);
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-details').value = '';
+}
+
+function navigate(section) {
+  alert(`فتح قسم: ${section}`);
+}
+function addTask() {
+  const title = document.getElementById('task-title').value;
+  const details = document.getElementById('task-details').value;
+  if (!title || !details) return alert('يرجى إدخال العنوان والتفاصيل');
+  const column = document.querySelector('.column');
+  const task = document.createElement('div');
+  task.className = 'task';
+  task.innerHTML = `
+    <strong>${title}</strong>
+    <p>${details}</p>
+    <div class='task-footer'>
+      <span>أنت</span>
+      <span>${new Date().toLocaleDateString('ar')}</span>
+    </div>
+    <div class='task-actions'>
+      <button onclick="editTask(this)">✏️ تعديل</button>
+      <button onclick="deleteTask(this)">🗑️ حذف</button>
+      <button onclick="commentTask(this)">💬 تعليق</button>
+    </div>`;
+  column.appendChild(task);
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-details').value = '';
+}
+
+function deleteTask(button) {
+  if (confirm('هل أنت متأكد من حذف المهمة؟')) {
+    button.closest('.task').remove();
+  }
+}
+
+function editTask(button) {
+  const task = button.closest('.task');
+  const title = prompt('تعديل العنوان:', task.querySelector('strong').innerText);
+  const details = prompt('تعديل التفاصيل:', task.querySelector('p').innerText);
+  if (title) task.querySelector('strong').innerText = title;
+  if (details) task.querySelector('p').innerText = details;
+}
+
+function commentTask(button) {
+  const comment = prompt('أدخل تعليقك:');
+  if (comment) alert(`✅ تم تسجيل تعليقك: "${comment}"`);
+}
+</script>
 </head>
 <body>
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" width="100%">
+    <h2>القائمة</h2>
+    <div onclick="navigate('projects')">📁 المشاريع</div>
+    <div onclick="navigate('tasks')">🧾 المهام</div>
+    <div onclick="navigate('team')">👥 الفريق</div>
+    <div onclick="navigate('calendar')">📅 مواعيد</div>
+    <div onclick="navigate('reports')">📊 تقارير</div>
+    <div onclick="navigate('settings')">⚙️ الإعدادات</div>
     <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" width="100%">
     <h2>القائمة</h2>
     <div>📁 المشاريع</div>
@@ -171,6 +248,11 @@
     <div>⚙️ الإعدادات</div>
   </div>
   <div class="content">
+    <div id="add-task-form" style="padding: 1rem; background:#1e2130; display: flex; flex-direction: column; gap: 0.5rem;">
+      <input id="task-title" type="text" placeholder="عنوان التكليف" style="padding: 0.5rem; border-radius: 5px; border:none; background:#2a2c3f; color:white;">
+      <textarea id="task-details" placeholder="تفاصيل المهمة..." style="padding: 0.5rem; border-radius: 5px; border:none; background:#2a2c3f; color:white;"></textarea>
+      <button onclick="addTask()" style="background:#5c6bc0; color:white; padding:0.5rem; border:none; border-radius:6px; cursor:pointer;">➕ إضافة المهمة</button>
+    </div>
     <header>
       نظام متابعة المهام - GD.Yaroub
       <span style="font-size: 0.9rem; font-weight: normal;">لوحة إدارية تفاعلية بإبداع فانتازي ✨</span>
@@ -228,7 +310,7 @@
     <div class="chat-box">
       <h4>🧠 اقتراح فوري</h4>
       <textarea placeholder="اكتب فكرة، ملاحظة، أو تعليق..."></textarea>
-      <button>أرسل الآن</button>
+      <button onclick="alert('✅ تم إرسال الاقتراح بنجاح')">أرسل الآن</button>
     </div>
   </div>
 <script>
