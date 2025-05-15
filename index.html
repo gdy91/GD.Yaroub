@@ -7,6 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; }
     header { background: #3f2b5a; color: #fff; padding: 1rem; text-align: center; font-size: 1.5rem; }
@@ -23,8 +24,6 @@
   <header>نظام GD.Yaroub - تسجيل دخول</header>
   <div class="container" id="login-section">
     <input id="login-name" placeholder="الاسم">
-    <input id="login-email" placeholder="البريد الإلكتروني">
-    <input id="login-phone" placeholder="رقم الهاتف">
     <input id="login-pass" type="password" placeholder="كلمة السر">
     <button onclick="login()">دخول</button>
   </div>
@@ -41,7 +40,6 @@
     </select>
     <input type="file" id="admin-file">
     <button onclick="addTask()">إضافة المهمة</button>
-
     <div id="task-list"></div>
   </div>
 
@@ -60,16 +58,14 @@
     let isAdmin = false;
 
     function login() {
-      const name = document.getElementById('login-name').value;
-      const email = document.getElementById('login-email').value;
-      const phone = document.getElementById('login-phone').value;
+      const name = document.getElementById('login-name').value.trim();
       const pass = document.getElementById('login-pass').value;
-      if (!name || !pass) return alert("أدخل جميع الحقول المطلوبة.");
+      if (!name || !pass) return alert("أدخل الاسم وكلمة السر.");
 
       isAdmin = pass === "2022002200";
       if (pass !== "202200" && !isAdmin) return alert("كلمة السر غير صحيحة");
 
-      currentUser = { name, email, phone, isAdmin };
+      currentUser = { name, isAdmin };
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('main-section').style.display = 'block';
       loadTasks();
@@ -87,21 +83,22 @@
         status,
         created: new Date().toLocaleString(),
         author: currentUser.name,
-        authorEmail: currentUser.email,
         notes: [],
         attachment: null
       };
+
+      const saveData = () => db.collection('tasks').add(data).then(() => loadTasks());
 
       if (file) {
         const ref = storage.ref().child('attachments/' + Date.now() + '-' + file.name);
         ref.put(file).then(snapshot => {
           snapshot.ref.getDownloadURL().then(url => {
             data.attachment = url;
-            db.collection('tasks').add(data).then(() => loadTasks());
+            saveData();
           });
         });
       } else {
-        db.collection('tasks').add(data).then(() => loadTasks());
+        saveData();
       }
 
       document.getElementById('task-title').value = "";
@@ -111,23 +108,19 @@
 
     function replyToTask(id) {
       const reply = prompt("أدخل ردك على التكليف:");
-      const image = document.createElement('input');
-      image.type = 'file';
-      image.accept = 'image/*';
-      image.onchange = () => {
-        const file = image.files[0];
-        if (file.size > 1024 * 1024) return alert("الحجم الأقصى 1 ميجا فقط.");
-        const ref = storage.ref().child('replies/' + Date.now() + '-' + file.name);
-        ref.put(file).then(snapshot => {
-          snapshot.ref.getDownloadURL().then(url => {
-            const note = `${currentUser.name} قال: ${reply} \nرابط الصورة: ${url}`;
-            db.collection('tasks').doc(id).update({
-              notes: firebase.firestore.FieldValue.arrayUnion(note)
-            }).then(() => loadTasks());
-          });
-        });
-      };
-      if (reply) image.click();
+      if (!reply) return;
+      db.collection('tasks').doc(id).update({
+        notes: firebase.firestore.FieldValue.arrayUnion(`${currentUser.name}: ${reply}`)
+      }).then(() => loadTasks());
+    }
+
+    function downloadPDF(task) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let content = `عنوان: ${task.title}\n\nتفاصيل:\n${task.desc}\n\nالحالة: ${task.status}\n\nأنشئت: ${task.created}\n\nصاحب التكليف: ${task.author}\n\nملاحظات:\n`;
+      task.notes.forEach(note => content += `- ${note}\n`);
+      doc.text(content, 10, 10);
+      doc.save(`${task.title}.pdf`);
     }
 
     function loadTasks() {
@@ -138,10 +131,16 @@
           const t = doc.data();
           const div = document.createElement('div');
           div.className = 'task';
-          div.innerHTML = `<b>${t.title}</b><br><i>${t.author}${t.author === 'admin' ? ' 👑' : ''}</i><br>${t.desc}<br><small>${t.created}</small><br>
+          div.innerHTML = `
+            <b>${t.title}</b><br>
+            <i>${t.author} ${t.author === currentUser.name && isAdmin ? '👑' : ''}</i><br>
+            ${t.desc}<br>
+            <small>${t.created}</small><br>
             ${t.attachment ? `<a class='attachment' href='${t.attachment}' target='_blank'>📎 مرفق</a>` : ''}
             ${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}
-            ${!isAdmin ? `<button onclick="replyToTask('${doc.id}')">💬 رد</button>` : ''}`;
+            ${!isAdmin ? `<button onclick="replyToTask('${doc.id}')">💬 رد</button>` : ''}
+            ${isAdmin ? `<button onclick='downloadPDF(${JSON.stringify(t)})'>📄 تحميل PDF</button>` : ''}
+          `;
           list.appendChild(div);
         });
       });
