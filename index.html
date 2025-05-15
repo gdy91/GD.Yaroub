@@ -7,50 +7,41 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; }
-    header { background: #3f2b5a; color: #fff; padding: 1rem; text-align: center; font-size: 1.5rem; }
-    .container { max-width: 800px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 10px; }
-    input, textarea, select { width: 100%; padding: 0.6rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; }
-    button { background: #7c4dff; color: #fff; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; margin: 0.3rem; }
-    .task { background: #f9f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .note { background: #eee; padding: 0.5rem; margin-top: 0.5rem; border-left: 4px solid #aaa; }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+    header { background: #3f2b5a; color: white; padding: 1rem; text-align: center; font-size: 1.7rem; position: sticky; top: 0; z-index: 10; }
+    .container { max-width: 900px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, textarea, select { width: 100%; padding: 0.6rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    button { background: #7c4dff; color: white; padding: 0.5rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; margin: 0.3rem; transition: background 0.3s; }
+    button:hover { background: #653bd3; }
+    .task { background: #f9f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; position: relative; }
+    .note { background: #eee; padding: 0.5rem; margin-top: 0.5rem; border-left: 4px solid #7c4dff; display: flex; justify-content: space-between; align-items: center; }
+    .note span { flex: 1; }
     .admin-tag { color: #7c4dff; font-weight: bold; margin-right: 6px; }
-    .attachment { margin-top: 0.5rem; display: block; }
-    #archive-section { display: none; }
+    .attachment { margin-top: 0.5rem; display: block; color: #3f2b5a; text-decoration: underline; }
   </style>
 </head>
 <body>
-  <header>
-    نظام GD.Yaroub - تسجيل دخول
-    <button onclick="toggleArchive()">📁 الأرشيف</button>
-  </header>
-
-  <div class="container" id="login-section">
-    <input id="login-name" placeholder="الاسم">
-    <input id="login-pass" type="password" placeholder="كلمة السر">
+  <header>نظام GD.Yaroub</header>
+  <div class="container" id="login">
+    <input id="name" placeholder="الاسم">
+    <input id="pass" type="password" placeholder="كلمة السر">
     <button onclick="login()">دخول</button>
   </div>
-
-  <div class="container" id="main-section" style="display:none">
-    <h3>إضافة تكليف جديد</h3>
-    <input id="task-title" placeholder="عنوان المهمة">
-    <textarea id="task-desc" placeholder="تفاصيل المهمة"></textarea>
-    <select id="task-status">
-      <option>جاري العمل</option>
-      <option>تم</option>
-      <option>معلق</option>
-      <option>متأخر</option>
-    </select>
-    <input type="file" id="admin-file">
-    <button onclick="addTask()">إضافة المهمة</button>
-    <div id="task-list"></div>
-  </div>
-
-  <div class="container" id="archive-section">
-    <h3>📁 المهام المنجزة</h3>
-    <div id="archive-list"></div>
+  <div class="container" id="panel" style="display:none">
+    <div id="controls" style="margin-bottom:2rem; display: none;">
+      <h3>إضافة مهمة جديدة</h3>
+      <input id="title" placeholder="عنوان المهمة">
+      <textarea id="desc" placeholder="تفاصيل المهمة"></textarea>
+      <select id="status">
+        <option>جاري العمل</option>
+        <option>تم</option>
+        <option>معلق</option>
+        <option>متأخر</option>
+      </select>
+      <button onclick="addTask()">حفظ المهمة</button>
+    </div>
+    <div id="tasks"></div>
   </div>
 
   <script>
@@ -58,110 +49,55 @@
       apiKey: "AIzaSyDk6PEIIwQCtNkkeC-W7rqvrmFngTzMH84",
       authDomain: "gd-yaroub.firebaseapp.com",
       projectId: "gd-yaroub",
-      storageBucket: "gd-yaroub.appspot.com"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const storage = firebase.storage();
 
-    let currentUser = {};
+    let currentUser = "";
     let isAdmin = false;
 
     function login() {
-      const name = document.getElementById('login-name').value.trim();
-      const pass = document.getElementById('login-pass').value;
-      if (!name || !pass) return alert("أدخل الاسم وكلمة السر.");
+      const name = document.getElementById('name').value.trim();
+      const pass = document.getElementById('pass').value;
+      if (!name || !pass) return alert('يرجى إدخال الاسم وكلمة السر');
+      isAdmin = pass === '919600';
+      if (!isAdmin && pass !== '202200') return alert('كلمة السر غير صحيحة');
 
-      isAdmin = pass === "919600";
-      if (pass !== "202200" && !isAdmin) return alert("كلمة السر غير صحيحة");
-
-      currentUser = { name, isAdmin };
-      document.getElementById('login-section').style.display = 'none';
-      document.getElementById('main-section').style.display = 'block';
+      currentUser = name;
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      if (isAdmin) document.getElementById('controls').style.display = 'block';
       loadTasks();
     }
 
-    function toggleArchive() {
-      const a = document.getElementById('archive-section');
-      const m = document.getElementById('main-section');
-      if (a.style.display === 'none') {
-        a.style.display = 'block';
-        m.style.display = 'none';
-        loadArchive();
-      } else {
-        a.style.display = 'none';
-        m.style.display = 'block';
-      }
-    }
-
     function addTask() {
-      const title = document.getElementById('task-title').value;
-      const desc = document.getElementById('task-desc').value;
-      const status = document.getElementById('task-status').value;
-      const file = document.getElementById('admin-file').files[0];
-
-      let data = {
-        title,
-        desc,
-        status,
-        created: new Date().toLocaleString(),
-        author: currentUser.name,
-        notes: [],
-        attachment: null
-      };
-
-      const saveData = () => db.collection('tasks').add(data).then(() => loadTasks());
-
-      if (file) {
-        const ref = storage.ref().child('attachments/' + Date.now() + '-' + file.name);
-        ref.put(file).then(snapshot => {
-          snapshot.ref.getDownloadURL().then(url => {
-            data.attachment = url;
-            saveData();
-          });
-        });
-      } else {
-        saveData();
-      }
-
-      document.getElementById('task-title').value = "";
-      document.getElementById('task-desc').value = "";
-      document.getElementById('admin-file').value = "";
+      const title = document.getElementById('title').value;
+      const desc = document.getElementById('desc').value;
+      const status = document.getElementById('status').value;
+      db.collection('tasks').add({ title, desc, status, created: new Date().toLocaleString(), author: currentUser, notes: [] }).then(loadTasks);
+      document.getElementById('title').value = '';
+      document.getElementById('desc').value = '';
     }
 
-    function replyToTask(id) {
-      const reply = prompt("أدخل ردك على التكليف:");
-      if (!reply) return;
-      db.collection('tasks').doc(id).update({
-        notes: firebase.firestore.FieldValue.arrayUnion(`${currentUser.name}: ${reply}`)
-      }).then(() => loadTasks());
-    }
-
-    function downloadPDF(task) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      doc.setFont("Courier", "normal");
-      doc.setFontSize(12);
-      doc.setLanguage("ar");
-      doc.text(`عنوان: ${task.title}\n\nتفاصيل:\n${task.desc}\n\nالحالة: ${task.status}\n\nأنشئت: ${task.created}\n\nصاحب التكليف: ${task.author}\n\nملاحظات:\n${task.notes.map(note => '- ' + note).join('\n')}`, 40, 50, { maxWidth: 500 });
-      doc.save(`${task.title}.pdf`);
-    }
-
-    function deleteTask(id) {
-      if (confirm("هل تريد حذف هذا التكليف نهائيًا؟")) {
-        db.collection('tasks').doc(id).delete().then(() => loadTasks());
-      }
-    }
-
-    function archiveTask(id, task) {
-      db.collection('archive').add(task).then(() => {
-        db.collection('tasks').doc(id).delete().then(() => loadTasks());
+    function addNote(id, oldText = "") {
+      const note = prompt("اكتب ملاحظتك", oldText);
+      if (!note) return;
+      db.collection('tasks').doc(id).get().then(doc => {
+        const data = doc.data();
+        const notes = data.notes || [];
+        const updated = notes.filter(n => !n.startsWith(currentUser + ":") || n === `${currentUser}: ${oldText}`);
+        updated.push(`${currentUser}: ${note}`);
+        db.collection('tasks').doc(id).update({ notes: updated }).then(loadTasks);
       });
     }
 
+    function archiveTask(id, task) {
+      db.collection('archive').add(task).then(() => db.collection('tasks').doc(id).delete().then(loadTasks));
+    }
+
     function loadTasks() {
-      const list = document.getElementById('task-list');
-      list.innerHTML = "";
+      const box = document.getElementById('tasks');
+      box.innerHTML = '';
       db.collection('tasks').get().then(snapshot => {
         snapshot.forEach(doc => {
           const t = doc.data();
@@ -169,40 +105,22 @@
           div.className = 'task';
           div.innerHTML = `
             <b>${t.title}</b><br>
-            <i>${t.author} ${isAdmin && t.author === currentUser.name ? '👑' : ''}</i><br>
-            ${t.desc}<br>
-            <small>${t.created}</small><br>
-            ${t.attachment ? `<a class='attachment' href='${t.attachment}' target='_blank'>📎 مرفق</a>` : ''}
-            ${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}
-            ${!isAdmin ? `<button onclick="replyToTask('${doc.id}')">💬 رد</button>` : ''}
-            ${isAdmin ? `
-              <button onclick='downloadPDF(${JSON.stringify(t)})'>📄 تحميل PDF</button>
-              <button onclick="deleteTask('${doc.id}')">🗑️ حذف</button>
-              <button onclick="archiveTask('${doc.id}', ${JSON.stringify(t)})">📁 تم الإنجاز</button>
-            ` : ''}
+            <small>${t.author} ${isAdmin ? '👑' : ''}</small><br>
+            <p>${t.desc}</p>
+            <p><strong>الحالة:</strong> ${t.status}</p>
+            <p><small>${t.created}</small></p>
+            ${(t.notes || []).map(note => {
+              const [user, ...rest] = note.split(": ");
+              const content = rest.join(": ");
+              const canEdit = isAdmin || user === currentUser;
+              return `<div class='note'><span>${note}</span> ${canEdit ? `<button onclick=\"addNote('${doc.id}','${content.replace(/"/g, '&quot;')}')\">✏️</button>` : ''}</div>`;
+            }).join('')}
+            <div style="margin-top:1rem">
+              <button onclick="addNote('${doc.id}')">💬 رد</button>
+              ${isAdmin ? `<button onclick='archiveTask("${doc.id}", ${JSON.stringify(t).replace(/"/g, '&quot;')})'>📁 تم الإنجاز</button>` : ''}
+            </div>
           `;
-          list.appendChild(div);
-        });
-      });
-    }
-
-    function loadArchive() {
-      const list = document.getElementById('archive-list');
-      list.innerHTML = "";
-      db.collection('archive').get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          const div = document.createElement('div');
-          div.className = 'task';
-          div.innerHTML = `
-            <b>${t.title}</b><br>
-            <i>${t.author}</i><br>
-            ${t.desc}<br>
-            <small>${t.created}</small><br>
-            ${t.attachment ? `<a class='attachment' href='${t.attachment}' target='_blank'>📎 مرفق</a>` : ''}
-            ${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}
-          `;
-          list.appendChild(div);
+          box.appendChild(div);
         });
       });
     }
