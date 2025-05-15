@@ -131,45 +131,16 @@
       cursor: pointer;
     }
   </style>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js">document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.kanban .column').forEach(column => {
-    new Sortable(column, {
-      group: 'shared',
-      animation: 150
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.kanban .column').forEach(column => {
+      new Sortable(column, {
+        group: 'shared',
+        animation: 150
+      });
     });
   });
-});
-
-function addTask() {
-  const title = document.getElementById('task-title').value;
-  const details = document.getElementById('task-details').value;
-  if (!title || !details) return alert('يرجى تعبئة كل الحقول');
-  const column = document.querySelector('.kanban .column');
-  const task = document.createElement('div');
-  task.className = 'task';
-  task.innerHTML = `
-    <strong>${title}</strong>
-    <p>${details}</p>
-    <div class='task-footer'>
-      <span>أنت</span>
-      <span>${new Date().toLocaleDateString('ar')}</span>
-    </div>
-    <div class='task-actions'>
-      <button onclick="editTask(this)">✏️ تعديل</button>
-      <button onclick="deleteTask(this)">🗑️ حذف</button>
-      <button onclick="commentTask(this)">💬 تعليق</button>
-      <button onclick="markAsCancelled(this)">❌ إلغاء</button>
-    </div>`;
-  column.appendChild(task);
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-details').value = '';
-}
-
-function markAsCancelled(button) {
-  const task = button.closest('.task');
-  const cancelledCol = [...document.querySelectorAll('.column')].find(col => col.textContent.includes('❌ ملغاة'));
-  if (cancelledCol) cancelledCol.appendChild(task);
-}
 </script>
 </head>
 <body>
@@ -184,7 +155,6 @@ function markAsCancelled(button) {
   </div>
   <header>
     نظام متابعة المهام - GD.Yaroub
-  $1
   <div style="position: absolute; top: 1rem; left: 1rem; display: flex; align-items: center; gap: 10px;">
     <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Webex_Meetings_Logo.svg" alt="Webex" width="32" height="32">
     <span style="color: white; font-size: 0.9rem;">yaroubb@gmail.com</span>
@@ -197,9 +167,19 @@ function markAsCancelled(button) {
       <button onclick="addTask()">➕ إضافة المهمة</button>
     </div>
     <div class="kanban" id="kanban-board">
-      <div class="column">
+      <div class="column" id="doing">
         <h3>📋 جاري العمل</h3>
       </div>
+      <div class="column" id="done">
+        <h3>✅ تم</h3>
+      </div>
+      <div class="column" id="paused">
+        <h3>⏸️ معلق</h3>
+      </div>
+      <div class="column" id="cancelled">
+        <h3>❌ ملغاة</h3>
+      </div>
+    </div>
       <div class="column">
         <h3>✅ تم</h3>
       </div>
@@ -210,14 +190,7 @@ function markAsCancelled(button) {
         <h3>❌ ملغاة</h3>
       </div>
     </div>
-          <div class="task-actions">
-            <button onclick="editTask(this)">✏️ تعديل</button>
-            <button onclick="deleteTask(this)">🗑️ حذف</button>
-            <button onclick="commentTask(this)">💬 تعليق</button>
-          </div>
-        </div>
-      </div>
-      <div class="column">
+          
         <h3>✅ تم</h3>
       </div>
       <div class="column">
