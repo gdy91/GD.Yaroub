@@ -101,6 +101,7 @@
     <h1>لوحة إدارة المهام | GD.Yaroub</h1>
   </header>
   <div class="sidebar">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" alt="العلم السوري الحر" style="width: 100%; margin-bottom: 1.5rem; border-radius: 6px; box-shadow: 0 0 10px rgba(0,255,128,0.3);">
     <h2>القائمة</h2>
     <div>📁 المشاريع</div>
     <div>📋 المهام</div>
@@ -156,6 +157,12 @@
               <button onclick="editTask('${doc.id}')">✏️</button>
               <button onclick="deleteTask('${doc.id}')">🗑️</button>
               <button onclick="changeStatus('${doc.id}')">🔁</button>
+              <button onclick="replyToTask('${doc.id}')">💬 رد</button>
+            </td>
+          
+              <button onclick="editTask('${doc.id}')">✏️</button>
+              <button onclick="deleteTask('${doc.id}')">🗑️</button>
+              <button onclick="changeStatus('${doc.id}')">🔁</button>
             </td>
           `;
           body.appendChild(row);
@@ -194,6 +201,14 @@
       const newStatus = prompt("أدخل الحالة الجديدة:");
       if (!newStatus) return;
       db.collection('tasks').doc(id).update({ status: newStatus }).then(loadTasks);
+    }
+
+    function replyToTask(id) {
+      const reply = prompt("اكتب تعليقك على التكليف:");
+      if (!reply) return;
+      db.collection('tasks').doc(id).collection('replies').add({ comment: reply, date: new Date().toLocaleString() });
+      alert("تم إضافة التعليق");
+    }).then(loadTasks);
     }
 
     loadTasks();
