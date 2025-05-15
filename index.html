@@ -83,7 +83,7 @@
 
     function login() {
       const name = document.getElementById('name').value.trim();
-      const pass = document.getElementById('pass').value;
+      const pass = document.getElementById('pass').value.trim();
       if (!name || !pass) return alert('يرجى إدخال الاسم وكلمة السر');
       isAdmin = pass === '919600';
       if (!isAdmin && pass !== '202200') return alert('كلمة السر غير صحيحة');
