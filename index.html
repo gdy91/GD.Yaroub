@@ -4,155 +4,107 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>نظام GD.Yaroub</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">function editTask(id) {
-  const newTitle = prompt("العنوان الجديد:");
-  const newDesc = prompt("تفاصيل جديدة:");
-  const newStatus = prompt("الحالة الجديدة (جاري العمل، تم، معلق، متأخر):");
-  if (newTitle && newDesc && newStatus) {
-    db.collection('tasks').doc(id).update({ title: newTitle, desc: newDesc, status: newStatus }).then(loadTasks);
-  }
-}
-</script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Almarai&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Almarai', sans-serif;
-      background: linear-gradient(to bottom right, #1f1c2c, #928dab);
+      background-color: #0f111a;
       color: #fff;
       margin: 0;
       padding: 0;
+      display: flex;
+    }
+    aside {
+      width: 250px;
+      background: #1a1d2e;
+      padding: 2rem 1rem;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    aside h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    main {
+      flex: 1;
+      padding: 2rem;
     }
     header {
-      background: #0f0f0f;
-      padding: 1rem;
-      text-align: center;
-      font-size: 2rem;
-      font-weight: bold;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
-    }
-    .container {
-      max-width: 960px;
-      margin: 3rem auto;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 2rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 1rem;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      background: #eee;
-      color: #111;
-    }
-    button {
-      background: #ff4081;
-      color: #fff;
-      padding: 0.8rem 1.6rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s ease-in-out;
-    }
-    button:hover {
-      background: #f50057;
-      transform: scale(1.05);
-    }
-    .task {
-      background: rgba(0, 0, 0, 0.2);
-      border-left: 5px solid #ff4081;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .note {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 0.7rem;
-      border-left: 3px solid #00adb5;
-      margin-top: 0.5rem;
-      border-radius: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 1rem;
+      background: #111;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-    .note span {
-      flex: 1;
-    }
-    .attachment {
-      color: #ffd700;
-      margin-top: 0.4rem;
-      display: inline-block;
-    }
-    #archiveBtn {
-      position: fixed;
-      left: 20px;
-      top: 20px;
-      background: #00adb5;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      z-index: 100;
-    }
-    .filters {
+    .kanban {
       display: flex;
       gap: 1rem;
-      margin-bottom: 1rem;
+      margin-top: 2rem;
     }
-    .stats {
-      text-align: center;
+    .column {
+      background: #1f2235;
+      flex: 1;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .column h3 {
+      margin-top: 0;
+    }
+    .task {
+      background: #2b2f44;
+      padding: 1rem;
       margin-bottom: 1rem;
-      font-weight: bold;
+      border-radius: 10px;
+      border-left: 4px solid #ff4081;
+    }
+    .task small {
+      color: #aaa;
+    }
+    .task button {
+      margin-top: 0.5rem;
+      background: #ff4081;
+      border: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      font-size: 0.8rem;
+    }
+    .task button:hover {
+      background: #f50057;
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;">
-    <span style="vertical-align: middle;">نظام GD.Yaroub</span>
-  </header>
-  <button id="archiveBtn" onclick="toggleArchive()">📁 عرض الأرشيف</button>
+  <aside>
+    <h2>GD.Yaroub</h2>
+    <div>📋 المهام</div>
+    <div>📁 الأرشيف</div>
+    <div>⚙️ الإعدادات</div>
+  </aside>
+  <main>
+    <header>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" alt="العلم السوري الحر" style="height:30px;">
+      <span>لوحة المهام</span>
+    </header>
 
-  <div class="container" id="panel">
-    <div id="controls" style="margin-bottom:2rem;">
-      <h3>إضافة مهمة جديدة</h3>
-      <input id="title" placeholder="عنوان المهمة">
-      <textarea id="desc" placeholder="تفاصيل المهمة"></textarea>
-      <select id="status">
-        <option>جاري العمل</option>
-        <option>تم</option>
-        <option>معلق</option>
-        <option>متأخر</option>
-      </select>
-      <button onclick="addTask()">إضافة التكليف</button>
+    <div class="kanban">
+      <div class="column" id="todo">
+        <h3>📌 جاري العمل</h3>
+      </div>
+      <div class="column" id="done">
+        <h3>✅ تم</h3>
+      </div>
+      <div class="column" id="hold">
+        <h3>⏸️ معلق</h3>
+      </div>
     </div>
-
-    <div class="filters">
-      <select id="filterStatus" onchange="loadTasks()">
-        <option value="">كل الحالات</option>
-        <option>جاري العمل</option>
-        <option>تم</option>
-        <option>معلق</option>
-        <option>متأخر</option>
-      </select>
-      <input type="text" id="searchInput" placeholder="بحث بعنوان المهمة" oninput="loadTasks()">
-    </div>
-
-    <div class="stats">
-      <span id="statsText"></span>
-    </div>
-
-    <div id="tasks"></div>
-    <div id="archive" style="display:none">
-      <h3>📁 المهام المنجزة</h3>
-      <div id="archiveTasks"></div>
-    </div>
-  </div>
+  </main>
 
   <script>
     const firebaseConfig = {
@@ -163,78 +115,52 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let currentUser = 'مدير';
-    let isAdmin = true;
+    function renderTask(docId, data) {
+      const task = document.createElement('div');
+      task.className = 'task';
+      task.innerHTML = `
+        <b>${data.title}</b><br>
+        <small>${data.author}</small>
+        <p>${data.desc}</p>
+        <button onclick="editTask('${docId}')">✏️ تعديل</button>
+        <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
+      `;
 
-    document.getElementById('panel').style.display = 'block';
-    document.getElementById('controls').style.display = 'block';
+      const columnMap = {
+        'جاري العمل': 'todo',
+        'تم': 'done',
+        'معلق': 'hold'
+      };
 
-    function addTask() {
-  const title = document.getElementById('title').value.trim();
-  const desc = document.getElementById('desc').value.trim();
-  const status = document.getElementById('status').value;
-  if (!title || !desc) return alert('يرجى تعبئة جميع الحقول');
-  db.collection('tasks').add({ title, desc, status, created: new Date().toLocaleString(), author: currentUser, notes: [] }).then(loadTasks);
-  document.getElementById('title').value = '';
-  document.getElementById('desc').value = '';
-}
-      document.getElementById('title').value = '';
-      document.getElementById('desc').value = '';
+      const col = document.getElementById(columnMap[data.status] || 'todo');
+      if (col) col.appendChild(task);
     }
 
-    function addNote(id, oldText = "") {
-      const note = prompt("اكتب ملاحظتك", oldText);
-      if (!note) return;
-      db.collection('tasks').doc(id).get().then(doc => {
-        const data = doc.data();
-        const notes = data.notes || [];
-        const updated = notes.filter(n => !n.startsWith(currentUser + ":") || n === `${currentUser}: ${oldText}`);
-        updated.push(`${currentUser}: ${note}`);
-        db.collection('tasks').doc(id).update({ notes: updated }).then(loadTasks);
+    function loadTasks() {
+      document.getElementById('todo').innerHTML = '<h3>📌 جاري العمل</h3>';
+      document.getElementById('done').innerHTML = '<h3>✅ تم</h3>';
+      document.getElementById('hold').innerHTML = '<h3>⏸️ معلق</h3>';
+      db.collection('tasks').get().then(snapshot => {
+        snapshot.forEach(doc => renderTask(doc.id, doc.data()));
       });
     }
 
-    function archiveTask(id, task) {
-      db.collection('archive').add(task).then(() => db.collection('tasks').doc(id).delete().then(loadTasks));
-    }
-
-    function deleteTask(id, fromArchive = false) {
-      if (confirm("هل تريد حذف المهمة نهائيًا؟")) {
-        const col = fromArchive ? 'archive' : 'tasks';
-        db.collection(col).doc(id).delete().then(() => fromArchive ? loadArchive() : loadTasks());
+    function editTask(id) {
+      const newTitle = prompt("العنوان الجديد:");
+      const newDesc = prompt("تفاصيل جديدة:");
+      const newStatus = prompt("الحالة الجديدة (جاري العمل، تم، معلق):");
+      if (newTitle && newDesc && newStatus) {
+        db.collection('tasks').doc(id).update({ title: newTitle, desc: newDesc, status: newStatus }).then(loadTasks);
       }
     }
 
-    function toggleArchive() {
-      const a = document.getElementById('archive');
-      a.style.display = a.style.display === 'none' ? 'block' : 'none';
-      if (a.style.display === 'block') loadArchive();
+    function deleteTask(id) {
+      if (confirm("هل تريد حذف المهمة نهائيًا؟")) {
+        db.collection('tasks').doc(id).delete().then(loadTasks);
+      }
     }
 
-    function loadArchive() {
-      const box = document.getElementById('archiveTasks');
-      box.innerHTML = '';
-      let count = 0;
-      db.collection('archive').get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          count++;
-          const div = document.createElement('div');
-          div.className = 'task';
-          div.innerHTML = `$1<div style=\"margin-top:1rem\">
-              ${isAdmin ? `<button onclick='editTask("${doc.id}")'>✏️ تعديل</button>` : ''}
-              ${isAdmin ? `<button onclick='editTask("${doc.id}")'>✏️ تعديل</button>` : ''}
-              <button onclick="addNote('${doc.id}')">💬 رد</button>
-              ${isAdmin ? `
-                <button onclick='archiveTask("${doc.id}", ${JSON.stringify(t).replace(/"/g, '&quot;')})'>📁 تم الإنجاز</button>
-                <button onclick='deleteTask("${doc.id}")'>🗑️ حذف</button>` : ''}
-            </div>
-          `;
-          box.appendChild(div);
-        });
-        document.getElementById('statsText').textContent = `📌 ${notDone} غير منجزة | ✅ ${done} منجزة`;
-      });
-    }
+    loadTasks();
   </script>
 </body>
 </html>
