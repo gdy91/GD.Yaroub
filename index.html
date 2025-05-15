@@ -21,6 +21,7 @@
       grid-template-areas:
         "sidebar header"
         "sidebar main";
+      min-height: 100vh;
     }
     header {
       grid-area: header;
@@ -53,21 +54,7 @@
       padding: 0.7rem 1rem;
       border-radius: 6px;
       cursor: pointer;
-      transition: 0.3s;
-    }
-    .sidebar div:hover {
-      background: #2a2f4c;
-    }
-    main {
-      grid-area: main;
-      padding: 1rem;
-      overflow-y: auto;
-    }
-    .task-form {
-      background: #1e2130;
-      padding: 1rem;
-      border-radius: 8px;
-      display: flex;
+      transition flex;
       flex-direction: column;
       gap: 0.5rem;
       margin-bottom: 1rem;
@@ -133,6 +120,90 @@
       color: white;
       cursor: pointer;
     }
+    /* --------------------- Responsive Design -------------------- */
+    @media (max-width: 900px) {
+      body {
+        grid-template-columns: 60px 1fr;
+      }
+      .sidebar {
+        padding: 0.5rem 0.25rem;
+        border-left: none;
+        border-bottom: 1px solid #2c2f3e;
+        align-items: center;
+      }
+      .sidebar img {
+        width: 40px;
+        margin-bottom: 0.5rem;
+      }
+      .sidebar div {
+        padding: 0.5rem 0.3rem;
+        font-size: 1.1rem;
+        text-align: center;
+      }
+      .sidebar div span {
+        display: none;
+      }
+    }
+    @media (max-width: 700px) {
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        width: 100vw;
+        border-bottom: 1px solid #2c2f3e;
+        border-left: none;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0.3rem 0.1rem;
+        height: 60px;
+      }
+      .sidebar img {
+        width: 32px;
+        height: 32px;
+        margin: 0;
+      }
+      .sidebar div {
+        padding: 0.3rem 0.2rem;
+        font-size: 1rem;
+        border-radius: 4px;
+      }
+      header {
+        padding: 0.7rem 1rem;
+        font-size: 1rem;
+        min-height: 56px;
+      }
+      main {
+        padding: 0.5rem;
+      }
+      .kanban {
+        flex-direction: column;
+        gap: 0.7rem;
+      }
+      .column {
+        min-width: unset;
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+    @media (max-width: 450px) {
+      header {
+        font-size: 0.95rem;
+        padding: 0.4rem 0.4rem;
+      }
+      .task-form input,
+      .task-form textarea,
+      .task-form select {
+        font-size: 1rem;
+      }
+      .column h3 {
+        font-size: 1.07rem;
+      }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
@@ -149,12 +220,12 @@
 <body>
   <div class="sidebar">
     <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg">
-    <div onclick="navigate('projects')">📁 المشاريع</div>
-    <div onclick="navigate('tasks')">🧾 المهام</div>
-    <div onclick="navigate('team')">👥 الفريق</div>
-    <div onclick="navigate('calendar')">📅 مواعيد</div>
-    <div onclick="navigate('reports')">📊 تقارير</div>
-    <div onclick="navigate('settings')">⚙️ الإعدادات</div>
+    <div onclick="navigate('projects')">📁 <span>المشاريع</span></div>
+    <div onclick="navigate('tasks')">🧾 <span>المهام</span></div>
+    <div onclick="navigate('team')">👥 <span>الفريق</span></div>
+    <div onclick="navigate('calendar')">📅 <span>مواعيد</span></div>
+    <div onclick="navigate('reports')">📊 <span>تقارير</span></div>
+    <div onclick="navigate('settings')">⚙️ <span>الإعدادات</span></div>
   </div>
   <header>
     نظام متابعة المهام - GD.Yaroub
