@@ -115,6 +115,7 @@
         <h3>⏸️ معلق</h3>
       </div>
     </div>
+  
   </main>
 
   <script>
@@ -129,7 +130,7 @@
     function renderTask(docId, data) {
       const task = document.createElement('div');
       task.className = 'task';
-      task.innerHTML = `$1</p>
+      task.innerHTML = `<b>${data.title}</b><br><p>${data.desc}</p>`
         <button onclick="changeStatus('${docId}')">🔁 حالة</button>
         <button onclick="editTask('${docId}')">✏️ تعديل</button>
         <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
