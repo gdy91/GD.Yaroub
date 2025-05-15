@@ -18,10 +18,15 @@
     .note { background: #eee; padding: 0.5rem; margin-top: 0.5rem; border-left: 4px solid #aaa; }
     .admin-tag { color: #7c4dff; font-weight: bold; margin-right: 6px; }
     .attachment { margin-top: 0.5rem; display: block; }
+    #archive-section { display: none; }
   </style>
 </head>
 <body>
-  <header>نظام GD.Yaroub - تسجيل دخول</header>
+  <header>
+    نظام GD.Yaroub - تسجيل دخول
+    <button onclick="toggleArchive()">📁 الأرشيف</button>
+  </header>
+
   <div class="container" id="login-section">
     <input id="login-name" placeholder="الاسم">
     <input id="login-pass" type="password" placeholder="كلمة السر">
@@ -43,6 +48,11 @@
     <div id="task-list"></div>
   </div>
 
+  <div class="container" id="archive-section">
+    <h3>📁 المهام المنجزة</h3>
+    <div id="archive-list"></div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDk6PEIIwQCtNkkeC-W7rqvrmFngTzMH84",
@@ -62,13 +72,26 @@
       const pass = document.getElementById('login-pass').value;
       if (!name || !pass) return alert("أدخل الاسم وكلمة السر.");
 
-      isAdmin = pass === "2022002200";
+      isAdmin = pass === "919600";
       if (pass !== "202200" && !isAdmin) return alert("كلمة السر غير صحيحة");
 
       currentUser = { name, isAdmin };
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('main-section').style.display = 'block';
       loadTasks();
+    }
+
+    function toggleArchive() {
+      const a = document.getElementById('archive-section');
+      const m = document.getElementById('main-section');
+      if (a.style.display === 'none') {
+        a.style.display = 'block';
+        m.style.display = 'none';
+        loadArchive();
+      } else {
+        a.style.display = 'none';
+        m.style.display = 'block';
+      }
     }
 
     function addTask() {
@@ -116,11 +139,24 @@
 
     function downloadPDF(task) {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let content = `عنوان: ${task.title}\n\nتفاصيل:\n${task.desc}\n\nالحالة: ${task.status}\n\nأنشئت: ${task.created}\n\nصاحب التكليف: ${task.author}\n\nملاحظات:\n`;
-      task.notes.forEach(note => content += `- ${note}\n`);
-      doc.text(content, 10, 10);
+      const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      doc.setFont("Courier", "normal");
+      doc.setFontSize(12);
+      doc.setLanguage("ar");
+      doc.text(`عنوان: ${task.title}\n\nتفاصيل:\n${task.desc}\n\nالحالة: ${task.status}\n\nأنشئت: ${task.created}\n\nصاحب التكليف: ${task.author}\n\nملاحظات:\n${task.notes.map(note => '- ' + note).join('\n')}`, 40, 50, { maxWidth: 500 });
       doc.save(`${task.title}.pdf`);
+    }
+
+    function deleteTask(id) {
+      if (confirm("هل تريد حذف هذا التكليف نهائيًا؟")) {
+        db.collection('tasks').doc(id).delete().then(() => loadTasks());
+      }
+    }
+
+    function archiveTask(id, task) {
+      db.collection('archive').add(task).then(() => {
+        db.collection('tasks').doc(id).delete().then(() => loadTasks());
+      });
     }
 
     function loadTasks() {
@@ -133,13 +169,38 @@
           div.className = 'task';
           div.innerHTML = `
             <b>${t.title}</b><br>
-            <i>${t.author} ${t.author === currentUser.name && isAdmin ? '👑' : ''}</i><br>
+            <i>${t.author} ${isAdmin && t.author === currentUser.name ? '👑' : ''}</i><br>
             ${t.desc}<br>
             <small>${t.created}</small><br>
             ${t.attachment ? `<a class='attachment' href='${t.attachment}' target='_blank'>📎 مرفق</a>` : ''}
             ${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}
             ${!isAdmin ? `<button onclick="replyToTask('${doc.id}')">💬 رد</button>` : ''}
-            ${isAdmin ? `<button onclick='downloadPDF(${JSON.stringify(t)})'>📄 تحميل PDF</button>` : ''}
+            ${isAdmin ? `
+              <button onclick='downloadPDF(${JSON.stringify(t)})'>📄 تحميل PDF</button>
+              <button onclick="deleteTask('${doc.id}')">🗑️ حذف</button>
+              <button onclick="archiveTask('${doc.id}', ${JSON.stringify(t)})">📁 تم الإنجاز</button>
+            ` : ''}
+          `;
+          list.appendChild(div);
+        });
+      });
+    }
+
+    function loadArchive() {
+      const list = document.getElementById('archive-list');
+      list.innerHTML = "";
+      db.collection('archive').get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const t = doc.data();
+          const div = document.createElement('div');
+          div.className = 'task';
+          div.innerHTML = `
+            <b>${t.title}</b><br>
+            <i>${t.author}</i><br>
+            ${t.desc}<br>
+            <small>${t.created}</small><br>
+            ${t.attachment ? `<a class='attachment' href='${t.attachment}' target='_blank'>📎 مرفق</a>` : ''}
+            ${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}
           `;
           list.appendChild(div);
         });
