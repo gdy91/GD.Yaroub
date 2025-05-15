@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GD.Yaroub Team's Task Manager</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
@@ -112,22 +114,29 @@
   </div>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDk6PEIIwQCtNkkeC-W7rqvrmFngTzMH84",
+      authDomain: "gd-yaroub.firebaseapp.com",
+      projectId: "gd-yaroub",
+      storageBucket: "gd-yaroub.firebasestorage.app",
+      messagingSenderId: "394361345360",
+      appId: "1:394361345360:web:2e0ad9d803d5cd7f064855",
+      measurementId: "G-NSNFZ3EBSS"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     let isAdmin = false;
     let username = '';
-    let tasks = [];
 
     function checkLogin() {
       const pass = document.getElementById('password-input').value;
       const name = document.getElementById('user-name').value.trim();
       if (!name) return alert('أدخل اسمك أولاً');
-      if (pass === '202200202200') {
-        isAdmin = true;
-      } else if (pass === '202200') {
-        isAdmin = false;
-      } else {
-        alert('كلمة المرور غير صحيحة');
-        return;
-      }
+      if (pass === '202200202200') isAdmin = true;
+      else if (pass === '202200') isAdmin = false;
+      else return alert('كلمة المرور غير صحيحة');
+
       username = name;
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-content').style.display = 'block';
@@ -139,33 +148,31 @@
       const desc = document.getElementById('task-desc').value.trim();
       const status = document.getElementById('task-status').value;
       if (!title) return alert('أدخل عنوان المهمة.');
-      const task = {
+
+      db.collection('tasks').add({
         title,
         desc,
         status,
         created: new Date().toLocaleString(),
-        logs: [`${username} أنشأ المهمة بتاريخ ${new Date().toLocaleString()}`]
-      };
-      tasks.push(task);
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      loadTasks();
-      document.getElementById('task-title').value = '';
-      document.getElementById('task-desc').value = '';
+        logs: [`${username} أنشأ المهمة بتاريخ ${new Date().toLocaleString()}`],
+        author: username
+      }).then(() => {
+        document.getElementById('task-title').value = '';
+        document.getElementById('task-desc').value = '';
+        loadTasks();
+      });
     }
 
-    function deleteTask(index) {
+    function deleteTask(id) {
       if (!isAdmin) return;
       if (confirm('هل أنت متأكد من حذف المهمة؟')) {
-        tasks.splice(index, 1);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        loadTasks();
+        db.collection('tasks').doc(id).delete().then(loadTasks);
       }
     }
 
-    function downloadPDF(index) {
+    function downloadPDF(task) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      const task = tasks[index];
       let content = `عنوان: ${task.title}\n\nتفاصيل:\n${task.desc}\n\nالحالة: ${task.status}\n\nأنشئت: ${task.created}\n\nسجل:\n`;
       task.logs.forEach(log => content += `- ${log}\n`);
       doc.text(content, 10, 10);
@@ -174,19 +181,21 @@
 
     function loadTasks() {
       const container = document.getElementById('task-list');
-      tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
       container.innerHTML = '';
-      tasks.forEach((task, i) => {
-        const div = document.createElement('div');
-        div.className = 'task-entry';
-        div.innerHTML = `
-          <strong>${task.title}</strong><br>
-          <em>${task.status}</em> - <small>${task.created}</small>
-          <p>${task.desc}</p>
-          <div class="log">${task.logs.map(l => `<div class='note'>${l}</div>`).join('')}</div>
-          ${isAdmin ? `<button onclick="deleteTask(${i})">🗑️ حذف</button> <button onclick="downloadPDF(${i})">📄 PDF</button>` : ''}
-        `;
-        container.appendChild(div);
+      db.collection('tasks').orderBy('created').get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const task = doc.data();
+          const div = document.createElement('div');
+          div.className = 'task-entry';
+          div.innerHTML = `
+            <strong>${task.title}</strong><br>
+            <em>${task.status}</em> - <small>${task.created}</small>
+            <p>${task.desc}</p>
+            <div class="log">${task.logs.map(l => `<div class='note'>${l}</div>`).join('')}</div>
+            ${isAdmin ? `<button onclick="deleteTask('${doc.id}')">🗑️ حذف</button> <button onclick='downloadPDF(${JSON.stringify(task)})'>📄 PDF</button>` : ''}
+          `;
+          container.appendChild(div);
+        });
       });
     }
 
