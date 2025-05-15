@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>نظام GD.Yaroub</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">function editTask(id) {
+  const newTitle = prompt("العنوان الجديد:");
+  const newDesc = prompt("تفاصيل جديدة:");
+  const newStatus = prompt("الحالة الجديدة (جاري العمل، تم، معلق، متأخر):");
+  if (newTitle && newDesc && newStatus) {
+    db.collection('tasks').doc(id).update({ title: newTitle, desc: newDesc, status: newStatus }).then(loadTasks);
+  }
+}
+</script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Almarai&display=swap" rel="stylesheet">
   <style>
@@ -105,7 +113,7 @@
 </head>
 <body>
   <header>
-    <img src="/mnt/data/a822f289-4d3f-4cb8-803f-08e861b4de2b.png" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;">
     <span style="vertical-align: middle;">نظام GD.Yaroub</span>
   </header>
   <button id="archiveBtn" onclick="toggleArchive()">📁 عرض الأرشيف</button>
@@ -209,51 +217,9 @@
           count++;
           const div = document.createElement('div');
           div.className = 'task';
-          div.innerHTML = `
-            <b>${t.title}</b><br>
-            <small>${t.author}</small><br>
-            <p>${t.desc}</p>
-            <p><strong>الحالة:</strong> ${t.status}</p>
-            <p><small>${t.created}</small></p>
-            ${isAdmin ? `<button onclick='deleteTask("${doc.id}", true)'>🗑️ حذف</button>` : ''}
-          `;
-          box.appendChild(div);
-        });
-        const stats = document.getElementById('statsText');
-        if (stats) stats.textContent = `📁 ${count} مهمة منجزة في الأرشيف`;
-      });
-    }
-
-    function loadTasks() {
-      const box = document.getElementById('tasks');
-      const filter = document.getElementById('filterStatus').value;
-      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-      box.innerHTML = '';
-      let done = 0, notDone = 0;
-
-      db.collection('tasks').get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          if (filter && t.status !== filter) return;
-          if (keyword && !t.title.toLowerCase().includes(keyword)) return;
-
-          if (t.status === 'تم') done++; else notDone++;
-
-          const div = document.createElement('div');
-          div.className = 'task';
-          div.innerHTML = `
-            <b>${t.title}</b><br>
-            <small>${t.author} ${isAdmin ? '👑' : ''}</small><br>
-            <p>${t.desc}</p>
-            <p><strong>الحالة:</strong> ${t.status}</p>
-            <p><small>${t.created}</small></p>
-            ${(t.notes || []).map(note => {
-              const [user, ...rest] = note.split(": ");
-              const content = rest.join(": ");
-              const canEdit = isAdmin || user === currentUser;
-              return `<div class='note'><span>${note}</span> ${canEdit ? `<button onclick=\"addNote('${doc.id}','${content.replace(/"/g, '&quot;')}')\">✏️</button>` : ''}</div>`;
-            }).join('')}
-            <div style="margin-top:1rem">
+          div.innerHTML = `$1<div style=\"margin-top:1rem\">
+              ${isAdmin ? `<button onclick='editTask("${doc.id}")'>✏️ تعديل</button>` : ''}
+              ${isAdmin ? `<button onclick='editTask("${doc.id}")'>✏️ تعديل</button>` : ''}
               <button onclick="addNote('${doc.id}')">💬 رد</button>
               ${isAdmin ? `
                 <button onclick='archiveTask("${doc.id}", ${JSON.stringify(t).replace(/"/g, '&quot;')})'>📁 تم الإنجاز</button>
