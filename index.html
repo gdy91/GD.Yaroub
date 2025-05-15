@@ -24,7 +24,7 @@
   </style>
 </head>
 <body>
-  <header>نظام GD.Yaroub</header>
+  <header><img src="/mnt/data/a822f289-4d3f-4cb8-803f-08e861b4de2b.png" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;">نظام GD.Yaroub</header>
   <button id="archiveBtn" onclick="toggleArchive()">📁 عرض الأرشيف</button>
 
   <div class="container" id="login">
@@ -84,13 +84,14 @@
     function login() {
   console.log('محاولة تسجيل الدخول...');
       const name = document.getElementById('name').value.trim();
-      const pass = document.getElementById('pass').value.trim();
+      const pass = document.getElementById('pass').value ? document.getElementById('pass').value.trim() : '';
       if (!name || !pass) {
     console.log('فشل: الاسم أو كلمة السر فارغة');
     return alert('يرجى إدخال الاسم وكلمة السر');
   }
       isAdmin = pass === '919600';
       if (!isAdmin && pass !== '202200') {
+  console.log('أدخلت كلمة السر:', pass);
     console.log('كلمة السر غير صحيحة');
     return alert('كلمة السر غير صحيحة');
   }
