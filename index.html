@@ -82,13 +82,21 @@
     let isAdmin = false;
 
     function login() {
+  console.log('محاولة تسجيل الدخول...');
       const name = document.getElementById('name').value.trim();
       const pass = document.getElementById('pass').value.trim();
-      if (!name || !pass) return alert('يرجى إدخال الاسم وكلمة السر');
+      if (!name || !pass) {
+    console.log('فشل: الاسم أو كلمة السر فارغة');
+    return alert('يرجى إدخال الاسم وكلمة السر');
+  }
       isAdmin = pass === '919600';
-      if (!isAdmin && pass !== '202200') return alert('كلمة السر غير صحيحة');
+      if (!isAdmin && pass !== '202200') {
+    console.log('كلمة السر غير صحيحة');
+    return alert('كلمة السر غير صحيحة');
+  }
       currentUser = name;
-      document.getElementById('login').style.display = 'none';
+      console.log('تم تسجيل الدخول بنجاح');
+document.getElementById('login').style.display = 'none';
       document.getElementById('panel').style.display = 'block';
       if (isAdmin) document.getElementById('controls').style.display = 'block';
       loadTasks();
