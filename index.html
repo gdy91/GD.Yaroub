@@ -9,16 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Almarai&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Almarai', sans-serif; background: linear-gradient(to right, #1d1f2f, #3e206d); color: white; margin: 0; }
-    header { background: #111; padding: 1.2rem; text-align: center; font-size: 2rem; letter-spacing: 2px; color: #f5f5f5; box-shadow: 0 0 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 1000; }
+    header { background: #111; padding: 1rem; text-align: center; font-size: 2rem; letter-spacing: 2px; box-shadow: 0 0 15px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 1000; }
     .container { max-width: 900px; margin: 2rem auto; background: #2b2d42; padding: 2rem; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
     input, textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: none; border-radius: 6px; font-size: 1rem; background: #fff; color: #000; }
     button { background: #ff4081; color: white; padding: 0.6rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 0.3rem; transition: transform 0.2s ease; }
     button:hover { transform: scale(1.05); background: #f50057; }
-    .task { background: #393b54; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; position: relative; color: #fff; }
+    .task { background: #393b54; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; position: relative; }
     .note { background: #202233; padding: 0.6rem; margin-top: 0.5rem; border-left: 4px solid #ff4081; display: flex; justify-content: space-between; align-items: center; }
     .note span { flex: 1; }
     .attachment { margin-top: 0.5rem; display: block; color: #ff79c6; text-decoration: underline; }
     #archiveBtn { position: fixed; left: 20px; top: 20px; z-index: 2000; background: #00adb5; }
+    .filters { display: flex; gap: 10px; margin-bottom: 1rem; }
+    .stats { text-align: center; font-size: 1rem; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
@@ -44,6 +46,22 @@
       </select>
       <button onclick="addTask()">حفظ المهمة</button>
     </div>
+
+    <div class="filters">
+      <select id="filterStatus" onchange="loadTasks()">
+        <option value="">كل الحالات</option>
+        <option>جاري العمل</option>
+        <option>تم</option>
+        <option>معلق</option>
+        <option>متأخر</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="بحث بعنوان المهمة" oninput="loadTasks()">
+    </div>
+
+    <div class="stats">
+      <span id="statsText"></span>
+    </div>
+
     <div id="tasks"></div>
     <div id="archive" style="display:none">
       <h3>📁 المهام المنجزة</h3>
@@ -101,9 +119,10 @@
       db.collection('archive').add(task).then(() => db.collection('tasks').doc(id).delete().then(loadTasks));
     }
 
-    function deleteTask(id) {
+    function deleteTask(id, fromArchive = false) {
       if (confirm("هل تريد حذف المهمة نهائيًا؟")) {
-        db.collection('tasks').doc(id).delete().then(loadTasks);
+        const col = fromArchive ? 'archive' : 'tasks';
+        db.collection(col).doc(id).delete().then(() => fromArchive ? loadArchive() : loadTasks());
       }
     }
 
@@ -127,6 +146,7 @@
             <p>${t.desc}</p>
             <p><strong>الحالة:</strong> ${t.status}</p>
             <p><small>${t.created}</small></p>
+            ${isAdmin ? `<button onclick='deleteTask("${doc.id}", true)'>🗑️ حذف</button>` : ''}
           `;
           box.appendChild(div);
         });
@@ -135,10 +155,19 @@
 
     function loadTasks() {
       const box = document.getElementById('tasks');
+      const filter = document.getElementById('filterStatus').value;
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
       box.innerHTML = '';
+      let done = 0, notDone = 0;
+
       db.collection('tasks').get().then(snapshot => {
         snapshot.forEach(doc => {
           const t = doc.data();
+          if (filter && t.status !== filter) return;
+          if (keyword && !t.title.toLowerCase().includes(keyword)) return;
+
+          if (t.status === 'تم') done++; else notDone++;
+
           const div = document.createElement('div');
           div.className = 'task';
           div.innerHTML = `
@@ -162,6 +191,7 @@
           `;
           box.appendChild(div);
         });
+        document.getElementById('statsText').textContent = `📌 ${notDone} غير منجزة | ✅ ${done} منجزة`;
       });
     }
   </script>
