@@ -133,15 +133,29 @@
     }
 
     function loadArchive() {
-      const box = document.getElementById('archiveTasks');
-      box.innerHTML = '';
-      db.collection('archive').get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          const div = document.createElement('div');
-          div.className = 'task';
-          div.innerHTML = `
-            <b>${t.title}</b><br>
+  const box = document.getElementById('archiveTasks');
+  box.innerHTML = '';
+  let count = 0;
+  db.collection('archive').get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const t = doc.data();
+      count++;
+      const div = document.createElement('div');
+      div.className = 'task';
+      div.innerHTML = `
+        <b>${t.title}</b><br>
+        <small>${t.author}</small><br>
+        <p>${t.desc}</p>
+        <p><strong>الحالة:</strong> ${t.status}</p>
+        <p><small>${t.created}</small></p>
+        ${isAdmin ? `<button onclick='deleteTask("${doc.id}", true)'>🗑️ حذف</button>` : ''}
+      `;
+      box.appendChild(div);
+    });
+    const stats = document.getElementById('statsText');
+    if (stats) stats.textContent = `📁 ${count} مهمة منجزة في الأرشيف`;
+  });
+}</b><br>
             <small>${t.author}</small><br>
             <p>${t.desc}</p>
             <p><strong>الحالة:</strong> ${t.status}</p>
