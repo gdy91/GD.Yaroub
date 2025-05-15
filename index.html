@@ -104,13 +104,14 @@
   </style>
 </head>
 <body>
-  <header><img src="/mnt/data/a822f289-4d3f-4cb8-803f-08e861b4de2b.png" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;"> <span style="vertical-align: middle;">نظام GD.Yaroub</span></header>
+  <header>
+    <img src="/mnt/data/a822f289-4d3f-4cb8-803f-08e861b4de2b.png" alt="العلم السوري الحر" style="height:30px; vertical-align: middle; margin-left: 10px;">
+    <span style="vertical-align: middle;">نظام GD.Yaroub</span>
+  </header>
   <button id="archiveBtn" onclick="toggleArchive()">📁 عرض الأرشيف</button>
 
-  
-
-  <div class="container" id="panel" style="display:none">
-    <div id="controls" style="margin-bottom:2rem; display: none;">
+  <div class="container" id="panel">
+    <div id="controls" style="margin-bottom:2rem;">
       <h3>إضافة مهمة جديدة</h3>
       <input id="title" placeholder="عنوان المهمة">
       <textarea id="desc" placeholder="تفاصيل المهمة"></textarea>
@@ -154,32 +155,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let currentUser = "";
-    let isAdmin = false;
+    let currentUser = 'مدير';
+    let isAdmin = true;
 
-    function login() {
-  console.log('محاولة تسجيل الدخول...');
-      const name = document.getElementById('name').value.trim();
-      const pass = document.getElementById('pass').value ? document.getElementById('pass').value.trim() : '';
-      if (!name || !pass) {
-    console.log('فشل: الاسم أو كلمة السر فارغة');
-    return alert('يرجى إدخال الاسم وكلمة السر');
-  }
-      isAdmin = pass === '919600';
-      if (!isAdmin && pass !== '202200') {
-  console.log('أدخلت كلمة السر:', pass);
-    console.log('كلمة السر غير صحيحة');
-    return alert('كلمة السر غير صحيحة');
-  }
-      currentUser = name;
-      console.log('تم تسجيل الدخول بنجاح');
-// document.getElementById('login').style.display = 'none'; // تم حذف صفحة تسجيل الدخول
-      document.getElementById('panel').style.display = 'block';
-      currentUser = 'مدير';
-      isAdmin = true;
-      if (isAdmin) document.getElementById('controls').style.display = 'block';
-      loadTasks();
-    }
+    document.getElementById('panel').style.display = 'block';
+    document.getElementById('controls').style.display = 'block';
 
     function addTask() {
       const title = document.getElementById('title').value;
@@ -220,22 +200,17 @@
     }
 
     function loadArchive() {
-  const box = document.getElementById('archiveTasks');
-  box.innerHTML = '';
-  let count = 0;
-  db.collection('archive').get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const t = doc.data();
-      count++;
-      const div = document.createElement('div');
-      div.className = 'task';
-      div.innerHTML = `
-        <b>${t.title}box.appendChild(div);
-    });
-    const stats = document.getElementById('statsText');
-    if (stats) stats.textContent = `📁 ${count} مهمة منجزة في الأرشيف`;
-  });
-}</b><br>
+      const box = document.getElementById('archiveTasks');
+      box.innerHTML = '';
+      let count = 0;
+      db.collection('archive').get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const t = doc.data();
+          count++;
+          const div = document.createElement('div');
+          div.className = 'task';
+          div.innerHTML = `
+            <b>${t.title}</b><br>
             <small>${t.author}</small><br>
             <p>${t.desc}</p>
             <p><strong>الحالة:</strong> ${t.status}</p>
@@ -244,6 +219,8 @@
           `;
           box.appendChild(div);
         });
+        const stats = document.getElementById('statsText');
+        if (stats) stats.textContent = `📁 ${count} مهمة منجزة في الأرشيف`;
       });
     }
 
