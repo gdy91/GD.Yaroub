@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Task Manager</title>
+  <style>
+    body { font-family: sans-serif; background: #f4f4f4; padding: 2rem; }
+    h1 { text-align: center; }
+    #task-form { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem; }
+    input[type="text"] { padding: 0.5rem; flex: 1; }
+    button { padding: 0.5rem 1rem; }
+    ul { list-style: none; padding: 0; max-width: 600px; margin: 0 auto; }
+    li { background: white; margin: 0.5rem 0; padding: 0.5rem; display: flex; justify-content: space-between; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .done { text-decoration: line-through; color: gray; }
+  </style>
+</head>
+<body>
+  <h1>📝 Simple Task Manager</h1>
+  <div id="task-form">
+    <input type="text" id="new-task" placeholder="Add a new task..." />
+    <button onclick="addTask()">Add</button>
+  </div>
+  <ul id="task-list"></ul>
+
+  <script>
+    const taskList = document.getElementById('task-list');
+
+    function loadTasks() {
+      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span class="${task.done ? 'done' : ''}" onclick="toggleTask(${index})">${task.name}</span>
+          <button onclick="deleteTask(${index})">❌</button>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    function addTask() {
+      const input = document.getElementById('new-task');
+      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+      if (input.value.trim()) {
+        tasks.push({ name: input.value.trim(), done: false });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        input.value = '';
+        loadTasks();
+      }
+    }
+
+    function deleteTask(index) {
+      const tasks = JSON.parse(localStorage.getItem('tasks'));
+      tasks.splice(index, 1);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    function toggleTask(index) {
+      const tasks = JSON.parse(localStorage.getItem('tasks'));
+      tasks[index].done = !tasks[index].done;
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
