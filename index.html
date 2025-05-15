@@ -3,128 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام GD.Yaroub الداخلي</title>
+  <title>نظام GD.Yaroub</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f8f8f8; }
-    header { background: #3f2b5a; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-    #app { max-width: 1000px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    input, textarea, select { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
-    button { padding: 0.5rem 1rem; margin-left: 5px; background: #7c4dff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .task { background: #f0f0ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .note { background: #eee; margin-top: 0.5rem; padding: 0.3rem; border-left: 3px solid #999; }
-    nav { position: fixed; top: 0; left: 0; padding: 1rem; background: #3f2b5a; color: white; height: 100vh; display: flex; flex-direction: column; gap: 10px; }
-    nav button { background: white; color: #3f2b5a; padding: 0.5rem; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; }
+    header { background: #3f2b5a; color: #fff; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    .container { max-width: 800px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 10px; }
+    input, textarea, select { width: 100%; padding: 0.6rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; }
+    button { background: #7c4dff; color: #fff; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; margin: 0.3rem; }
+    .task { background: #f9f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    .note { background: #eee; padding: 0.5rem; margin-top: 0.5rem; border-left: 4px solid #aaa; }
+    .admin-tag { color: #7c4dff; font-weight: bold; margin-right: 6px; }
+    .attachment { margin-top: 0.5rem; display: block; }
   </style>
 </head>
 <body>
-  <nav>
-    <button onclick="showPage('main')">المهام</button>
-    <button onclick="showPage('archive')">📁 الأرشيف</button>
-  </nav>
+  <header>نظام GD.Yaroub - تسجيل دخول</header>
+  <div class="container" id="login-section">
+    <input id="login-name" placeholder="الاسم">
+    <input id="login-email" placeholder="البريد الإلكتروني">
+    <input id="login-phone" placeholder="رقم الهاتف">
+    <input id="login-pass" type="password" placeholder="كلمة السر">
+    <button onclick="login()">دخول</button>
+  </div>
 
-  <div id="app">
-    <h2>إضافة تكليف جديد</h2>
-    <input id="name" placeholder="اسم المستخدم">
-    <input id="title" placeholder="عنوان التكليف">
-    <textarea id="desc" placeholder="تفاصيل المهمة"></textarea>
-    <select id="status">
+  <div class="container" id="main-section" style="display:none">
+    <h3>إضافة تكليف جديد</h3>
+    <input id="task-title" placeholder="عنوان المهمة">
+    <textarea id="task-desc" placeholder="تفاصيل المهمة"></textarea>
+    <select id="task-status">
       <option>جاري العمل</option>
       <option>تم</option>
-      <option>متأخر</option>
       <option>معلق</option>
-      <option>ملغى</option>
+      <option>متأخر</option>
     </select>
-    <select id="category">
-      <option>تصميم</option>
-      <option>مونتاج</option>
-      <option>اجتماع</option>
-      <option>عروض تقديمية</option>
-    </select>
-    <button onclick="addTask()">حفظ التكليف</button>
+    <input type="file" id="admin-file">
+    <button onclick="addTask()">إضافة المهمة</button>
 
-    <div id="tasks"></div>
-    <div id="archive" style="display:none;"><h3>📁 المهام المنجزة</h3><div id="doneTasks"></div></div>
+    <div id="task-list"></div>
   </div>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDk6PEIIwQCtNkkeC-W7rqvrmFngTzMH84",
       authDomain: "gd-yaroub.firebaseapp.com",
-      projectId: "gd-yaroub"
+      projectId: "gd-yaroub",
+      storageBucket: "gd-yaroub.appspot.com"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
-    function showPage(page) {
-      document.getElementById('tasks').style.display = page === 'main' ? 'block' : 'none';
-      document.getElementById('archive').style.display = page === 'archive' ? 'block' : 'none';
-      if (page === 'archive') loadArchive(); else loadTasks();
-    }
+    let currentUser = {};
+    let isAdmin = false;
 
-    function addTask() {
-      const name = document.getElementById('name').value.trim();
-      const title = document.getElementById('title').value.trim();
-      const desc = document.getElementById('desc').value.trim();
-      const status = document.getElementById('status').value;
-      const category = document.getElementById('category').value;
-      if (!name || !title) return alert("يرجى إدخال الاسم والعنوان.");
-      db.collection('tasks').add({ name, title, desc, status, category, created: new Date().toLocaleString(), notes: [] });
-      document.getElementById('title').value = "";
-      document.getElementById('desc').value = "";
+    function login() {
+      const name = document.getElementById('login-name').value;
+      const email = document.getElementById('login-email').value;
+      const phone = document.getElementById('login-phone').value;
+      const pass = document.getElementById('login-pass').value;
+      if (!name || !pass) return alert("أدخل جميع الحقول المطلوبة.");
+
+      isAdmin = pass === "2022002200";
+      if (pass !== "202200" && !isAdmin) return alert("كلمة السر غير صحيحة");
+
+      currentUser = { name, email, phone, isAdmin };
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('main-section').style.display = 'block';
       loadTasks();
     }
 
-    function addNote(id) {
-      const note = prompt("أدخل ردك على التكليف:");
-      if (note) {
-        db.collection('tasks').doc(id).update({
-          notes: firebase.firestore.FieldValue.arrayUnion(`${note} - ${new Date().toLocaleString()}`)
-        }).then(loadTasks);
+    function addTask() {
+      const title = document.getElementById('task-title').value;
+      const desc = document.getElementById('task-desc').value;
+      const status = document.getElementById('task-status').value;
+      const file = document.getElementById('admin-file').files[0];
+
+      let data = {
+        title,
+        desc,
+        status,
+        created: new Date().toLocaleString(),
+        author: currentUser.name,
+        authorEmail: currentUser.email,
+        notes: [],
+        attachment: null
+      };
+
+      if (file) {
+        const ref = storage.ref().child('attachments/' + Date.now() + '-' + file.name);
+        ref.put(file).then(snapshot => {
+          snapshot.ref.getDownloadURL().then(url => {
+            data.attachment = url;
+            db.collection('tasks').add(data).then(() => loadTasks());
+          });
+        });
+      } else {
+        db.collection('tasks').add(data).then(() => loadTasks());
       }
+
+      document.getElementById('task-title').value = "";
+      document.getElementById('task-desc').value = "";
+      document.getElementById('admin-file').value = "";
     }
 
-    function markDone(id, task) {
-      db.collection('archive').add(task);
-      db.collection('tasks').doc(id).delete().then(loadTasks);
+    function replyToTask(id) {
+      const reply = prompt("أدخل ردك على التكليف:");
+      const image = document.createElement('input');
+      image.type = 'file';
+      image.accept = 'image/*';
+      image.onchange = () => {
+        const file = image.files[0];
+        if (file.size > 1024 * 1024) return alert("الحجم الأقصى 1 ميجا فقط.");
+        const ref = storage.ref().child('replies/' + Date.now() + '-' + file.name);
+        ref.put(file).then(snapshot => {
+          snapshot.ref.getDownloadURL().then(url => {
+            const note = `${currentUser.name} قال: ${reply} \nرابط الصورة: ${url}`;
+            db.collection('tasks').doc(id).update({
+              notes: firebase.firestore.FieldValue.arrayUnion(note)
+            }).then(() => loadTasks());
+          });
+        });
+      };
+      if (reply) image.click();
     }
 
     function loadTasks() {
-      const container = document.getElementById('tasks');
-      container.innerHTML = "";
+      const list = document.getElementById('task-list');
+      list.innerHTML = "";
       db.collection('tasks').get().then(snapshot => {
         snapshot.forEach(doc => {
           const t = doc.data();
           const div = document.createElement('div');
           div.className = 'task';
-          div.innerHTML = `
-            <b>${t.title}</b> (${t.category})<br>${t.desc}<br><small>${t.created}</small><br>
-            الحالة: ${t.status}<br>
-            <button onclick="addNote('${doc.id}')">💬 رد</button>
-            <button onclick="markDone('${doc.id}', ${JSON.stringify(t).replace(/"/g, '&quot;')})">✅ تم الإنجاز</button>
+          div.innerHTML = `<b>${t.title}</b><br><i>${t.author}${t.author === 'admin' ? ' 👑' : ''}</i><br>${t.desc}<br><small>${t.created}</small><br>
+            ${t.attachment ? `<a class='attachment' href='${t.attachment}' target='_blank'>📎 مرفق</a>` : ''}
             ${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}
-          `;
-          container.appendChild(div);
+            ${!isAdmin ? `<button onclick="replyToTask('${doc.id}')">💬 رد</button>` : ''}`;
+          list.appendChild(div);
         });
       });
     }
-
-    function loadArchive() {
-      const container = document.getElementById('doneTasks');
-      container.innerHTML = "";
-      db.collection('archive').get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          const div = document.createElement('div');
-          div.className = 'task';
-          div.innerHTML = `<b>${t.title}</b> (${t.category})<br>${t.desc}<br><small>${t.created}</small><br><div>${t.notes.map(n => `<div class='note'>${n}</div>`).join('')}</div>`;
-          container.appendChild(div);
-        });
-      });
-    }
-
-    loadTasks();
   </script>
 </body>
 </html>
