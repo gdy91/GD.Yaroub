@@ -93,6 +93,17 @@
       <span>لوحة المهام</span>
     </header>
 
+    <div style="margin: 1rem 0; display: flex; gap: 1rem;">
+      <input id="newTitle" placeholder="عنوان المهمة" style="flex:1; padding:0.5rem; border-radius:6px; border:none;">
+      <input id="newDesc" placeholder="تفاصيل المهمة" style="flex:2; padding:0.5rem; border-radius:6px; border:none;">
+      <select id="newStatus" style="padding:0.5rem; border-radius:6px;">
+        <option>جاري العمل</option>
+        <option>تم</option>
+        <option>معلق</option>
+      </select>
+      <button onclick="addTask()">➕ إضافة</button>
+    </div>
+
     <div class="kanban">
       <div class="column" id="todo">
         <h3>📌 جاري العمل</h3>
@@ -118,10 +129,8 @@
     function renderTask(docId, data) {
       const task = document.createElement('div');
       task.className = 'task';
-      task.innerHTML = `
-        <b>${data.title}</b><br>
-        <small>${data.author}</small>
-        <p>${data.desc}</p>
+      task.innerHTML = `$1</p>
+        <button onclick="changeStatus('${docId}')">🔁 حالة</button>
         <button onclick="editTask('${docId}')">✏️ تعديل</button>
         <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
       `;
@@ -161,6 +170,24 @@
     }
 
     loadTasks();
+
+    function addTask() {
+      const title = document.getElementById('newTitle').value.trim();
+      const desc = document.getElementById('newDesc').value.trim();
+      const status = document.getElementById('newStatus').value;
+      if (!title || !desc) return alert('يرجى تعبئة العنوان والتفاصيل');
+      db.collection('tasks').add({ title, desc, status, author: 'مدير' }).then(() => {
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newDesc').value = '';
+        loadTasks();
+      });
+    }
+
+    function changeStatus(id) {
+      const newStatus = prompt("أدخل الحالة الجديدة (جاري العمل، تم، معلق):");
+      if (!newStatus) return;
+      db.collection('tasks').doc(id).update({ status: newStatus }).then(loadTasks);
+    }
   </script>
 </body>
 </html>
