@@ -32,6 +32,7 @@
       color: white;
       font-size: 1.2rem;
       font-weight: bold;
+      position: relative;
     }
     .sidebar {
       grid-area: sidebar;
@@ -72,7 +73,8 @@
       margin-bottom: 1rem;
     }
     .task-form input,
-    .task-form textarea {
+    .task-form textarea,
+    .task-form select {
       background: #2a2c3f;
       color: white;
       border: none;
@@ -99,6 +101,7 @@
       padding: 1rem;
       display: flex;
       flex-direction: column;
+      min-height: 300px;
     }
     .column h3 {
       margin-bottom: 1rem;
@@ -131,17 +134,17 @@
       cursor: pointer;
     }
   </style>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.kanban .column').forEach(column => {
-      new Sortable(column, {
-        group: 'shared',
-        animation: 150
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.kanban .column').forEach(column => {
+        new Sortable(column, {
+          group: 'shared',
+          animation: 150
+        });
       });
     });
-  });
-</script>
+  </script>
 </head>
 <body>
   <div class="sidebar">
@@ -155,15 +158,21 @@
   </div>
   <header>
     نظام متابعة المهام - GD.Yaroub
-  <div style="position: absolute; top: 1rem; left: 1rem; display: flex; align-items: center; gap: 10px;">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Webex_Meetings_Logo.svg" alt="Webex" width="32" height="32">
-    <span style="color: white; font-size: 0.9rem;">yaroubb@gmail.com</span>
-  </div>
+    <div style="position: absolute; top: 1rem; left: 1rem; display: flex; align-items: center; gap: 10px;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Webex_Meetings_Logo.svg" alt="Webex" width="32" height="32">
+      <span style="color: white; font-size: 0.9rem;">yaroubb@gmail.com</span>
+    </div>
+  </header>
   <main>
-
     <div class="task-form">
       <input id="task-title" type="text" placeholder="عنوان المهمة">
       <textarea id="task-details" placeholder="تفاصيل المهمة"></textarea>
+      <select id="task-status">
+        <option value="doing">📋 جاري العمل</option>
+        <option value="done">✅ تم</option>
+        <option value="paused">⏸️ معلق</option>
+        <option value="cancelled">❌ ملغاة</option>
+      </select>
       <button onclick="addTask()">➕ إضافة المهمة</button>
     </div>
     <div class="kanban" id="kanban-board">
@@ -180,31 +189,14 @@
         <h3>❌ ملغاة</h3>
       </div>
     </div>
-      <div class="column">
-        <h3>✅ تم</h3>
-      </div>
-      <div class="column">
-        <h3>⏸️ معلق</h3>
-      </div>
-      <div class="column">
-        <h3>❌ ملغاة</h3>
-      </div>
-    </div>
-          
-        <h3>✅ تم</h3>
-      </div>
-      <div class="column">
-        <h3>⏸️ معلق</h3>
-      </div>
-    </div>
-  
-</main>
+  </main>
   <script>
     function addTask() {
       const title = document.getElementById('task-title').value;
       const details = document.getElementById('task-details').value;
+      const status = document.getElementById('task-status').value;
       if (!title || !details) return alert('يرجى تعبئة كل الحقول');
-      const column = document.querySelector('.column');
+      const column = document.getElementById(status);
       const task = document.createElement('div');
       task.className = 'task';
       task.innerHTML = `
