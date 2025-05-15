@@ -184,12 +184,13 @@ function markAsCancelled(button) {
   </div>
   <header>
     نظام متابعة المهام - GD.Yaroub
-  </header>
+  $1
+  <div style="position: absolute; top: 1rem; left: 1rem; display: flex; align-items: center; gap: 10px;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Webex_Meetings_Logo.svg" alt="Webex" width="32" height="32">
+    <span style="color: white; font-size: 0.9rem;">yaroubb@gmail.com</span>
+  </div>
   <main>
-<section id="team" style="background:#1e2130;padding:1rem;border-radius:10px;margin-bottom:1rem;">
-  <h2>نبذة عني</h2>
-  <p>يعرب نضال بلال، مصمم جرافيك محترف يتمتع بخبرة واسعة في تصميم الشعارات وأنظمة الهوية البصرية للمؤسسات الحكومية والخاصة. متخصص في تحويل الأفكار إلى حلول بصرية ذات تأثير.</p>
-</section>
+
     <div class="task-form">
       <input id="task-title" type="text" placeholder="عنوان المهمة">
       <textarea id="task-details" placeholder="تفاصيل المهمة"></textarea>
@@ -198,13 +199,17 @@ function markAsCancelled(button) {
     <div class="kanban" id="kanban-board">
       <div class="column">
         <h3>📋 جاري العمل</h3>
-        <div class="task">
-          <strong>مهمة تجريبية</strong>
-          <p>وصف المهمة هنا...</p>
-          <div class="task-footer">
-            <span>يعرب</span>
-            <span>2025/05/16</span>
-          </div>
+      </div>
+      <div class="column">
+        <h3>✅ تم</h3>
+      </div>
+      <div class="column">
+        <h3>⏸️ معلق</h3>
+      </div>
+      <div class="column">
+        <h3>❌ ملغاة</h3>
+      </div>
+    </div>
           <div class="task-actions">
             <button onclick="editTask(this)">✏️ تعديل</button>
             <button onclick="deleteTask(this)">🗑️ حذف</button>
@@ -219,9 +224,7 @@ function markAsCancelled(button) {
         <h3>⏸️ معلق</h3>
       </div>
     </div>
-  <div class="column">
-  <h3>❌ ملغاة</h3>
-</div>
+  
 </main>
   <script>
     function addTask() {
