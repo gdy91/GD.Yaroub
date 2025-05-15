@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,89 +7,117 @@
   <style>
     body { font-family: sans-serif; background: #f4f4f4; padding: 2rem; }
     h1 { text-align: center; font-size: 2.5rem; margin-bottom: 2rem; }
-    #login-screen, #main-content { max-width: 800px; margin: auto; display: none; }
+    #login-screen, #main-content { max-width: 1000px; margin: auto; display: none; }
     #login-screen.active, #main-content.active { display: block; }
     #password-input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; font-size: 1rem; }
-    #categories { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
-    .category { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); flex: 1 1 45%; }
-    .category h2 { margin-top: 0; font-size: 1.25rem; }
+    #categories { display: flex; overflow-x: auto; gap: 1rem; margin-bottom: 1rem; }
+    .category { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); min-width: 250px; }
+    .category h2 { margin-top: 0; font-size: 1.25rem; text-align: center; }
     input[type="text"], textarea { width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; }
     button { padding: 0.5rem 1rem; margin-top: 0.25rem; }
     .task-entry { background: #fff; padding: 0.5rem; border-radius: 5px; margin-bottom: 0.5rem; box-shadow: 0 0 3px rgba(0,0,0,0.1); }
     .done { text-decoration: line-through; color: gray; }
     .log { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
     .note { background: #eef; padding: 0.25rem; margin-top: 0.25rem; border-left: 3px solid #00f; }
+    #lang-switch { position: fixed; top: 10px; right: 10px; }
   </style>
 </head>
 <body>
+  <div id="lang-switch">
+    <button onclick="setLang('en')">English</button>
+    <button onclick="setLang('ar')">العربية</button>
+  </div>
+
   <div id="login-screen" class="active">
-    <h1>GD.Yaroub Team's</h1>
-    <p>Enter Password to Continue:</p>
+    <h1 id="login-title">GD.Yaroub Team's</h1>
+    <p id="login-instruction">Enter Password to Continue:</p>
     <input type="password" id="password-input" placeholder="Password" />
-    <button onclick="checkPassword()">Enter</button>
+    <button onclick="checkPassword()" id="login-button">Enter</button>
   </div>
 
   <div id="main-content">
-    <h1>GD.Yaroub Team's Task Manager</h1>
+    <h1 id="main-title">GD.Yaroub Team's Task Manager</h1>
     <div id="categories"></div>
-    <div>
-      <h2>Add New Task (Only Admin)</h2>
-      <select id="task-category">
-        <option value="Posters">Poster Design</option>
-        <option value="Presentation">Presentation Design</option>
-        <option value="Prints">Prints</option>
-        <option value="VideoEditing">Video Editing</option>
-        <option value="Meetings">Meetings Schedule</option>
-      </select>
+    <div id="admin-panel" style="display:none">
+      <h2 id="add-task-title">Add New Task (Only Admin)</h2>
+      <select id="task-category"></select>
       <input type="text" id="task-title" placeholder="Task Title" />
       <textarea id="task-desc" placeholder="Task description / meeting details..."></textarea>
-      <button onclick="addTask()">Add Task</button>
+      <button onclick="addTask()" id="add-task-button">Add Task</button>
     </div>
   </div>
 
   <script>
-    const PASSWORD = '202200';
-    const adminUser = true; // لو حبيت تخلي الدخول لاحقاً بأسماء
+    let isAdmin = false;
+    let lang = 'en';
 
     const loginScreen = document.getElementById('login-screen');
     const mainContent = document.getElementById('main-content');
-    const taskCategories = ['Posters', 'Presentation', 'Prints', 'VideoEditing', 'Meetings'];
+    const adminPanel = document.getElementById('admin-panel');
+    const categoriesContainer = document.getElementById('categories');
     const categoryNames = {
-      Posters: 'Poster Design',
-      Presentation: 'Presentation Design',
-      Prints: 'Prints',
-      VideoEditing: 'Video Editing',
-      Meetings: 'Meetings Schedule'
+      Posters: { en: 'Poster Design', ar: 'تصميم بوستر' },
+      Presentation: { en: 'Presentation Design', ar: 'تصميم عرض تقديمي' },
+      Prints: { en: 'Prints', ar: 'مطبوعات' },
+      VideoEditing: { en: 'Video Editing', ar: 'مونتاج فيديو' },
+      Meetings: { en: 'Meetings Schedule', ar: 'مواعيد الاجتماعات' },
+      YouTube: { en: 'YouTube Channel', ar: 'قناة يوتيوب' },
+      Scripts: { en: 'Scenario Writing', ar: 'كتابة السيناريوهات' },
+      Marketing: { en: 'Marketing Plans', ar: 'خطط تسويق' },
+      Publishing: { en: 'Publishing Plans', ar: 'خطط نشر' }
     };
 
-    const taskList = {};
+    const taskCategories = Object.keys(categoryNames);
+
+    function setLang(newLang) {
+      lang = newLang;
+      document.getElementById('login-title').innerText = lang === 'ar' ? 'فريق GD.Yaroub' : "GD.Yaroub Team's";
+      document.getElementById('login-instruction').innerText = lang === 'ar' ? 'أدخل كلمة المرور للمتابعة:' : 'Enter Password to Continue:';
+      document.getElementById('login-button').innerText = lang === 'ar' ? 'دخول' : 'Enter';
+      document.getElementById('main-title').innerText = lang === 'ar' ? 'مدير المهام - فريق GD.Yaroub' : "GD.Yaroub Team's Task Manager";
+      document.getElementById('add-task-title').innerText = lang === 'ar' ? 'إضافة مهمة جديدة (للإدارة فقط)' : 'Add New Task (Only Admin)';
+      document.getElementById('add-task-button').innerText = lang === 'ar' ? 'إضافة' : 'Add Task';
+      renderCategories();
+      loadTasks();
+    }
 
     function checkPassword() {
       const input = document.getElementById('password-input').value;
-      if (input === PASSWORD) {
-        loginScreen.classList.remove('active');
-        mainContent.classList.add('active');
-        renderCategories();
-        loadTasks();
+      if (input === '202200202200') {
+        isAdmin = true;
+      } else if (input === '202200') {
+        isAdmin = false;
       } else {
-        alert('Wrong password!');
+        alert(lang === 'ar' ? 'كلمة المرور خاطئة' : 'Wrong password!');
+        return;
       }
+      loginScreen.classList.remove('active');
+      mainContent.classList.add('active');
+      if (isAdmin) adminPanel.style.display = 'block';
+      renderCategories();
+      loadTasks();
     }
 
     function renderCategories() {
-      const catDiv = document.getElementById('categories');
-      catDiv.innerHTML = '';
+      categoriesContainer.innerHTML = '';
+      const select = document.getElementById('task-category');
+      select.innerHTML = '';
       taskCategories.forEach(cat => {
         const div = document.createElement('div');
         div.className = 'category';
         div.id = 'cat-' + cat;
-        div.innerHTML = `<h2>${categoryNames[cat]}</h2><div id="tasks-${cat}"></div>`;
-        catDiv.appendChild(div);
+        div.innerHTML = `<h2>${categoryNames[cat][lang]}</h2><div id="tasks-${cat}"></div>`;
+        categoriesContainer.appendChild(div);
+
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = categoryNames[cat][lang];
+        select.appendChild(option);
       });
     }
 
     function addTask() {
-      if (!adminUser) return alert('Only admin can add tasks.');
+      if (!isAdmin) return alert('Only admin can add tasks.');
       const cat = document.getElementById('task-category').value;
       const title = document.getElementById('task-title').value.trim();
       const desc = document.getElementById('task-desc').value.trim();
@@ -110,19 +138,19 @@
     }
 
     function addNoteToTask(cat, index) {
-      const note = prompt('Add note or update status:');
+      const note = prompt(lang === 'ar' ? 'أضف ملاحظة أو حدث الحالة:' : 'Add note or update status:');
       if (note) {
         const tasks = JSON.parse(localStorage.getItem('tasks-' + cat));
         const now = new Date();
         tasks[index].logs.push(`${now.toLocaleDateString()} - ${note}`);
-        if (note.toLowerCase().includes('done')) tasks[index].status = 'Done';
+        if (note.toLowerCase().includes('done') || note.includes('تم')) tasks[index].status = 'Done';
         localStorage.setItem('tasks-' + cat, JSON.stringify(tasks));
         loadTasks();
       }
     }
 
     function deleteTask(cat, index) {
-      if (!adminUser) return alert('Only admin can delete.');
+      if (!isAdmin) return alert('Only admin can delete.');
       const tasks = JSON.parse(localStorage.getItem('tasks-' + cat));
       tasks.splice(index, 1);
       localStorage.setItem('tasks-' + cat, JSON.stringify(tasks));
@@ -138,20 +166,23 @@
           const div = document.createElement('div');
           div.className = 'task-entry';
           div.innerHTML = `
-            <strong>${task.title}</strong> <br />
-            <small>Created: ${new Date(task.created).toLocaleDateString()}</small><br />
+            <strong>${task.title}</strong><br />
+            <small>${lang === 'ar' ? 'أنشئت بتاريخ' : 'Created'}: ${new Date(task.created).toLocaleDateString()}</small><br />
             <p>${task.desc}</p>
             <div class="log">
-              Status: ${task.status}<br />
+              ${lang === 'ar' ? 'الحالة' : 'Status'}: ${task.status}<br />
               ${task.logs.map(l => `<div class="note">${l}</div>`).join('')}
             </div>
-            <button onclick="addNoteToTask('${cat}', ${i})">Add Note</button>
-            ${adminUser ? `<button onclick="deleteTask('${cat}', ${i})">Delete</button>` : ''}
+            <button onclick="addNoteToTask('${cat}', ${i})">${lang === 'ar' ? 'إضافة ملاحظة' : 'Add Note'}</button>
+            ${isAdmin ? `<button onclick="deleteTask('${cat}', ${i})">${lang === 'ar' ? 'حذف' : 'Delete'}</button>` : ''}
           `;
           container.appendChild(div);
         });
       });
     }
+
+    // بدء التشغيل
+    renderCategories();
   </script>
 </body>
 </html>
