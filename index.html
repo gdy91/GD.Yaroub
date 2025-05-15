@@ -129,7 +129,7 @@
         <option>معلق</option>
         <option>متأخر</option>
       </select>
-      <button onclick="addTask()">حفظ المهمة</button>
+      <button onclick="addTask()">إضافة التكليف</button>
     </div>
 
     <div class="filters">
@@ -170,10 +170,14 @@
     document.getElementById('controls').style.display = 'block';
 
     function addTask() {
-      const title = document.getElementById('title').value;
-      const desc = document.getElementById('desc').value;
-      const status = document.getElementById('status').value;
-      db.collection('tasks').add({ title, desc, status, created: new Date().toLocaleString(), author: currentUser, notes: [] }).then(loadTasks);
+  const title = document.getElementById('title').value.trim();
+  const desc = document.getElementById('desc').value.trim();
+  const status = document.getElementById('status').value;
+  if (!title || !desc) return alert('يرجى تعبئة جميع الحقول');
+  db.collection('tasks').add({ title, desc, status, created: new Date().toLocaleString(), author: currentUser, notes: [] }).then(loadTasks);
+  document.getElementById('title').value = '';
+  document.getElementById('desc').value = '';
+}
       document.getElementById('title').value = '';
       document.getElementById('desc').value = '';
     }
