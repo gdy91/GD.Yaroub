@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GD.Yaroub Team's Task Manager</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --main-bg: #f4f4f4;
@@ -45,12 +46,9 @@
       background: var(--light);
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       border-radius: 8px;
-      display: none;
     }
-    #login-screen.active, #main-content.active {
-      display: block;
-    }
-    #password-input, input[type="text"], textarea, select {
+    #main-content { display: none; }
+    input, select, textarea {
       width: 100%;
       padding: 0.7rem;
       margin: 0.5rem 0;
@@ -68,30 +66,6 @@
       border-radius: 4px;
       margin-top: 0.5rem;
     }
-    #categories {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .category {
-      min-width: 260px;
-      background: var(--light);
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
-      flex-shrink: 0;
-    }
-    .category h2 {
-      font-size: 1.2rem;
-      color: var(--primary);
-      border-bottom: 1px solid #eee;
-      padding-bottom: 0.5rem;
-      margin-bottom: 0.5rem;
-      text-align: center;
-    }
     .task-entry {
       background: #f9f9f9;
       border-radius: 5px;
@@ -99,16 +73,12 @@
       margin-bottom: 0.5rem;
       box-shadow: 0 0 3px rgba(0,0,0,0.1);
     }
-    .task-entry strong {
-      color: var(--primary);
-    }
     .note {
       background: #eae6ff;
       border-left: 3px solid var(--accent);
       padding: 0.3rem;
       margin-top: 0.25rem;
     }
-    .log { font-size: 0.85rem; color: #555; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -117,5 +87,112 @@
     <button onclick="setLang('en')">English</button>
     <button onclick="setLang('ar')">العربية</button>
   </div>
+
+  <div id="login-screen">
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="user-name" placeholder="أدخل اسمك" />
+    <input type="password" id="password-input" placeholder="كلمة السر" />
+    <button onclick="checkLogin()">دخول</button>
+  </div>
+
+  <div id="main-content">
+    <h3>إضافة تكليف جديد</h3>
+    <input type="text" id="task-title" placeholder="عنوان التكليف" />
+    <textarea id="task-desc" placeholder="تفاصيل المهمة..."></textarea>
+    <select id="task-status">
+      <option value="جاري العمل">جاري العمل</option>
+      <option value="تم">تم</option>
+      <option value="متأخر">متأخر</option>
+      <option value="معلق">معلق</option>
+      <option value="ملغى">ملغى</option>
+    </select>
+    <button onclick="addTask()">حفظ التكليف</button>
+    <hr>
+    <div id="task-list"></div>
+  </div>
+
+  <script>
+    let isAdmin = false;
+    let username = '';
+    let tasks = [];
+
+    function checkLogin() {
+      const pass = document.getElementById('password-input').value;
+      const name = document.getElementById('user-name').value.trim();
+      if (!name) return alert('أدخل اسمك أولاً');
+      if (pass === '202200202200') {
+        isAdmin = true;
+      } else if (pass === '202200') {
+        isAdmin = false;
+      } else {
+        alert('كلمة المرور غير صحيحة');
+        return;
+      }
+      username = name;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+      loadTasks();
+    }
+
+    function addTask() {
+      const title = document.getElementById('task-title').value.trim();
+      const desc = document.getElementById('task-desc').value.trim();
+      const status = document.getElementById('task-status').value;
+      if (!title) return alert('أدخل عنوان المهمة.');
+      const task = {
+        title,
+        desc,
+        status,
+        created: new Date().toLocaleString(),
+        logs: [`${username} أنشأ المهمة بتاريخ ${new Date().toLocaleString()}`]
+      };
+      tasks.push(task);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      loadTasks();
+      document.getElementById('task-title').value = '';
+      document.getElementById('task-desc').value = '';
+    }
+
+    function deleteTask(index) {
+      if (!isAdmin) return;
+      if (confirm('هل أنت متأكد من حذف المهمة؟')) {
+        tasks.splice(index, 1);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        loadTasks();
+      }
+    }
+
+    function downloadPDF(index) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const task = tasks[index];
+      let content = `عنوان: ${task.title}\n\nتفاصيل:\n${task.desc}\n\nالحالة: ${task.status}\n\nأنشئت: ${task.created}\n\nسجل:\n`;
+      task.logs.forEach(log => content += `- ${log}\n`);
+      doc.text(content, 10, 10);
+      doc.save(`${task.title}.pdf`);
+    }
+
+    function loadTasks() {
+      const container = document.getElementById('task-list');
+      tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+      container.innerHTML = '';
+      tasks.forEach((task, i) => {
+        const div = document.createElement('div');
+        div.className = 'task-entry';
+        div.innerHTML = `
+          <strong>${task.title}</strong><br>
+          <em>${task.status}</em> - <small>${task.created}</small>
+          <p>${task.desc}</p>
+          <div class="log">${task.logs.map(l => `<div class='note'>${l}</div>`).join('')}</div>
+          ${isAdmin ? `<button onclick="deleteTask(${i})">🗑️ حذف</button> <button onclick="downloadPDF(${i})">📄 PDF</button>` : ''}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function setLang(lang) {
+      alert(`Language switched to ${lang}`);
+    }
+  </script>
 </body>
 </html>
