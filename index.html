@@ -130,7 +130,13 @@
     function renderTask(docId, data) {
       const task = document.createElement('div');
       task.className = 'task';
-      task.innerHTML = `<b>${data.title}</b><br><p>${data.desc}</p>`
+      task.innerHTML = `
+        <b>${data.title}</b><br>
+        <p>${data.desc}</p>
+        <button onclick="changeStatus('${docId}')">🔁 حالة</button>
+        <button onclick="editTask('${docId}')">✏️ تعديل</button>
+        <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
+      `
         <button onclick="changeStatus('${docId}')">🔁 حالة</button>
         <button onclick="editTask('${docId}')">✏️ تعديل</button>
         <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
