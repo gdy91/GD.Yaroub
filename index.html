@@ -3,68 +3,155 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Task Manager</title>
+  <title>GD.Yaroub Team's Task Manager</title>
   <style>
     body { font-family: sans-serif; background: #f4f4f4; padding: 2rem; }
-    h1 { text-align: center; }
-    #task-form { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem; }
-    input[type="text"] { padding: 0.5rem; flex: 1; }
-    button { padding: 0.5rem 1rem; }
-    ul { list-style: none; padding: 0; max-width: 600px; margin: 0 auto; }
-    li { background: white; margin: 0.5rem 0; padding: 0.5rem; display: flex; justify-content: space-between; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    h1 { text-align: center; font-size: 2.5rem; margin-bottom: 2rem; }
+    #login-screen, #main-content { max-width: 800px; margin: auto; display: none; }
+    #login-screen.active, #main-content.active { display: block; }
+    #password-input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; font-size: 1rem; }
+    #categories { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+    .category { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); flex: 1 1 45%; }
+    .category h2 { margin-top: 0; font-size: 1.25rem; }
+    input[type="text"], textarea { width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; }
+    button { padding: 0.5rem 1rem; margin-top: 0.25rem; }
+    .task-entry { background: #fff; padding: 0.5rem; border-radius: 5px; margin-bottom: 0.5rem; box-shadow: 0 0 3px rgba(0,0,0,0.1); }
     .done { text-decoration: line-through; color: gray; }
+    .log { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+    .note { background: #eef; padding: 0.25rem; margin-top: 0.25rem; border-left: 3px solid #00f; }
   </style>
 </head>
 <body>
-  <h1>📝 Simple Task Manager</h1>
-  <div id="task-form">
-    <input type="text" id="new-task" placeholder="Add a new task..." />
-    <button onclick="addTask()">Add</button>
+  <div id="login-screen" class="active">
+    <h1>GD.Yaroub Team's</h1>
+    <p>Enter Password to Continue:</p>
+    <input type="password" id="password-input" placeholder="Password" />
+    <button onclick="checkPassword()">Enter</button>
   </div>
-  <ul id="task-list"></ul>
+
+  <div id="main-content">
+    <h1>GD.Yaroub Team's Task Manager</h1>
+    <div id="categories"></div>
+    <div>
+      <h2>Add New Task (Only Admin)</h2>
+      <select id="task-category">
+        <option value="Posters">Poster Design</option>
+        <option value="Presentation">Presentation Design</option>
+        <option value="Prints">Prints</option>
+        <option value="VideoEditing">Video Editing</option>
+        <option value="Meetings">Meetings Schedule</option>
+      </select>
+      <input type="text" id="task-title" placeholder="Task Title" />
+      <textarea id="task-desc" placeholder="Task description / meeting details..."></textarea>
+      <button onclick="addTask()">Add Task</button>
+    </div>
+  </div>
 
   <script>
-    const taskList = document.getElementById('task-list');
+    const PASSWORD = '202200';
+    const adminUser = true; // لو حبيت تخلي الدخول لاحقاً بأسماء
 
-    function loadTasks() {
-      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-      taskList.innerHTML = '';
-      tasks.forEach((task, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span class="${task.done ? 'done' : ''}" onclick="toggleTask(${index})">${task.name}</span>
-          <button onclick="deleteTask(${index})">❌</button>
-        `;
-        taskList.appendChild(li);
+    const loginScreen = document.getElementById('login-screen');
+    const mainContent = document.getElementById('main-content');
+    const taskCategories = ['Posters', 'Presentation', 'Prints', 'VideoEditing', 'Meetings'];
+    const categoryNames = {
+      Posters: 'Poster Design',
+      Presentation: 'Presentation Design',
+      Prints: 'Prints',
+      VideoEditing: 'Video Editing',
+      Meetings: 'Meetings Schedule'
+    };
+
+    const taskList = {};
+
+    function checkPassword() {
+      const input = document.getElementById('password-input').value;
+      if (input === PASSWORD) {
+        loginScreen.classList.remove('active');
+        mainContent.classList.add('active');
+        renderCategories();
+        loadTasks();
+      } else {
+        alert('Wrong password!');
+      }
+    }
+
+    function renderCategories() {
+      const catDiv = document.getElementById('categories');
+      catDiv.innerHTML = '';
+      taskCategories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'category';
+        div.id = 'cat-' + cat;
+        div.innerHTML = `<h2>${categoryNames[cat]}</h2><div id="tasks-${cat}"></div>`;
+        catDiv.appendChild(div);
       });
     }
 
     function addTask() {
-      const input = document.getElementById('new-task');
-      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-      if (input.value.trim()) {
-        tasks.push({ name: input.value.trim(), done: false });
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        input.value = '';
+      if (!adminUser) return alert('Only admin can add tasks.');
+      const cat = document.getElementById('task-category').value;
+      const title = document.getElementById('task-title').value.trim();
+      const desc = document.getElementById('task-desc').value.trim();
+      if (!title) return;
+      const task = {
+        title,
+        desc,
+        created: new Date().toISOString(),
+        status: 'In Progress',
+        logs: []
+      };
+      const tasks = JSON.parse(localStorage.getItem('tasks-' + cat) || '[]');
+      tasks.push(task);
+      localStorage.setItem('tasks-' + cat, JSON.stringify(tasks));
+      document.getElementById('task-title').value = '';
+      document.getElementById('task-desc').value = '';
+      loadTasks();
+    }
+
+    function addNoteToTask(cat, index) {
+      const note = prompt('Add note or update status:');
+      if (note) {
+        const tasks = JSON.parse(localStorage.getItem('tasks-' + cat));
+        const now = new Date();
+        tasks[index].logs.push(`${now.toLocaleDateString()} - ${note}`);
+        if (note.toLowerCase().includes('done')) tasks[index].status = 'Done';
+        localStorage.setItem('tasks-' + cat, JSON.stringify(tasks));
         loadTasks();
       }
     }
 
-    function deleteTask(index) {
-      const tasks = JSON.parse(localStorage.getItem('tasks'));
+    function deleteTask(cat, index) {
+      if (!adminUser) return alert('Only admin can delete.');
+      const tasks = JSON.parse(localStorage.getItem('tasks-' + cat));
       tasks.splice(index, 1);
-      localStorage.setItem('tasks', JSON.stringify(tasks));
+      localStorage.setItem('tasks-' + cat, JSON.stringify(tasks));
       loadTasks();
     }
 
-    function toggleTask(index) {
-      const tasks = JSON.parse(localStorage.getItem('tasks'));
-      tasks[index].done = !tasks[index].done;
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      loadTasks();
+    function loadTasks() {
+      taskCategories.forEach(cat => {
+        const container = document.getElementById('tasks-' + cat);
+        const tasks = JSON.parse(localStorage.getItem('tasks-' + cat) || '[]');
+        container.innerHTML = '';
+        tasks.forEach((task, i) => {
+          const div = document.createElement('div');
+          div.className = 'task-entry';
+          div.innerHTML = `
+            <strong>${task.title}</strong> <br />
+            <small>Created: ${new Date(task.created).toLocaleDateString()}</small><br />
+            <p>${task.desc}</p>
+            <div class="log">
+              Status: ${task.status}<br />
+              ${task.logs.map(l => `<div class="note">${l}</div>`).join('')}
+            </div>
+            <button onclick="addNoteToTask('${cat}', ${i})">Add Note</button>
+            ${adminUser ? `<button onclick="deleteTask('${cat}', ${i})">Delete</button>` : ''}
+          `;
+          container.appendChild(div);
+        });
+      });
     }
-
-    loadTasks();
   </script>
 </body>
 </html>
