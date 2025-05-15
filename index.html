@@ -131,6 +131,46 @@
       cursor: pointer;
     }
   </style>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js">document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.kanban .column').forEach(column => {
+    new Sortable(column, {
+      group: 'shared',
+      animation: 150
+    });
+  });
+});
+
+function addTask() {
+  const title = document.getElementById('task-title').value;
+  const details = document.getElementById('task-details').value;
+  if (!title || !details) return alert('يرجى تعبئة كل الحقول');
+  const column = document.querySelector('.kanban .column');
+  const task = document.createElement('div');
+  task.className = 'task';
+  task.innerHTML = `
+    <strong>${title}</strong>
+    <p>${details}</p>
+    <div class='task-footer'>
+      <span>أنت</span>
+      <span>${new Date().toLocaleDateString('ar')}</span>
+    </div>
+    <div class='task-actions'>
+      <button onclick="editTask(this)">✏️ تعديل</button>
+      <button onclick="deleteTask(this)">🗑️ حذف</button>
+      <button onclick="commentTask(this)">💬 تعليق</button>
+      <button onclick="markAsCancelled(this)">❌ إلغاء</button>
+    </div>`;
+  column.appendChild(task);
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-details').value = '';
+}
+
+function markAsCancelled(button) {
+  const task = button.closest('.task');
+  const cancelledCol = [...document.querySelectorAll('.column')].find(col => col.textContent.includes('❌ ملغاة'));
+  if (cancelledCol) cancelledCol.appendChild(task);
+}
+</script>
 </head>
 <body>
   <div class="sidebar">
@@ -146,12 +186,16 @@
     نظام متابعة المهام - GD.Yaroub
   </header>
   <main>
+<section id="team" style="background:#1e2130;padding:1rem;border-radius:10px;margin-bottom:1rem;">
+  <h2>نبذة عني</h2>
+  <p>يعرب نضال بلال، مصمم جرافيك محترف يتمتع بخبرة واسعة في تصميم الشعارات وأنظمة الهوية البصرية للمؤسسات الحكومية والخاصة. متخصص في تحويل الأفكار إلى حلول بصرية ذات تأثير.</p>
+</section>
     <div class="task-form">
       <input id="task-title" type="text" placeholder="عنوان المهمة">
       <textarea id="task-details" placeholder="تفاصيل المهمة"></textarea>
       <button onclick="addTask()">➕ إضافة المهمة</button>
     </div>
-    <div class="kanban">
+    <div class="kanban" id="kanban-board">
       <div class="column">
         <h3>📋 جاري العمل</h3>
         <div class="task">
@@ -175,7 +219,10 @@
         <h3>⏸️ معلق</h3>
       </div>
     </div>
-  </main>
+  <div class="column">
+  <h3>❌ ملغاة</h3>
+</div>
+</main>
   <script>
     function addTask() {
       const title = document.getElementById('task-title').value;
