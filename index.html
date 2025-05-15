@@ -3,100 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام GD.Yaroub</title>
+  <title>GD.Yaroub Dashboard</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Almarai&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Almarai', sans-serif;
-      background-color: #0f111a;
-      color: #fff;
       margin: 0;
-      padding: 0;
-      display: flex;
-    }
-    aside {
-      width: 250px;
-      background: #1a1d2e;
-      padding: 2rem 1rem;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    aside h2 {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    main {
-      flex: 1;
-      padding: 2rem;
+      background: #101324;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #e2e8f0;
     }
     header {
+      background: #1c1f32;
+      padding: 1rem 2rem;
+      color: #fff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      background: #111;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      border-bottom: 1px solid #2d314a;
     }
-    .kanban {
+    .sidebar {
+      position: fixed;
+      top: 0; right: 0;
+      width: 250px;
+      height: 100%;
+      background: #1a1d2e;
+      padding: 2rem 1rem;
+      border-left: 1px solid #2c314b;
+    }
+    .sidebar h2 {
+      font-size: 1.2rem;
+      color: #8fb4ff;
+      margin-bottom: 2rem;
+    }
+    .sidebar div {
+      margin-bottom: 1.2rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .sidebar div:hover {
+      background: #2b2f44;
+    }
+    main {
+      margin-right: 250px;
+      padding: 2rem;
+    }
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1e2238;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .task-table th, .task-table td {
+      padding: 1rem;
+      text-align: right;
+      border-bottom: 1px solid #2d314a;
+    }
+    .task-table th {
+      background: #272b43;
+    }
+    .task-table td button {
+      margin-left: 0.5rem;
+      padding: 0.3rem 0.7rem;
+      background: #5562ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .add-task {
+      margin: 1rem 0;
       display: flex;
       gap: 1rem;
-      margin-top: 2rem;
     }
-    .column {
-      background: #1f2235;
-      flex: 1;
-      border-radius: 10px;
-      padding: 1rem;
-    }
-    .column h3 {
-      margin-top: 0;
-    }
-    .task {
-      background: #2b2f44;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 10px;
-      border-left: 4px solid #ff4081;
-    }
-    .task small {
-      color: #aaa;
-    }
-    .task button {
-      margin-top: 0.5rem;
-      background: #ff4081;
+    .add-task input, .add-task select {
+      padding: 0.5rem;
+      border-radius: 6px;
       border: none;
-      padding: 0.3rem 0.6rem;
-      border-radius: 5px;
-      cursor: pointer;
-      color: white;
-      font-size: 0.8rem;
+      background: #2d314a;
+      color: #fff;
     }
-    .task button:hover {
-      background: #f50057;
+    .add-task button {
+      padding: 0.5rem 1rem;
+      background: #38bdf8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <aside>
-    <h2>GD.Yaroub</h2>
+  <header>
+    <h1>لوحة إدارة المهام | GD.Yaroub</h1>
+  </header>
+  <div class="sidebar">
+    <h2>القائمة</h2>
+    <div>📁 المشاريع</div>
     <div>📋 المهام</div>
-    <div>📁 الأرشيف</div>
+    <div>👥 المستخدمين</div>
     <div>⚙️ الإعدادات</div>
-  </aside>
+  </div>
   <main>
-    <header>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/5/54/Flag_of_Syria_%282025-%29.svg" alt="العلم السوري الحر" style="height:30px;">
-      <span>لوحة المهام</span>
-    </header>
-
-    <div style="margin: 1rem 0; display: flex; gap: 1rem;">
-      <input id="newTitle" placeholder="عنوان المهمة" style="flex:1; padding:0.5rem; border-radius:6px; border:none;">
-      <input id="newDesc" placeholder="تفاصيل المهمة" style="flex:2; padding:0.5rem; border-radius:6px; border:none;">
-      <select id="newStatus" style="padding:0.5rem; border-radius:6px;">
+    <div class="add-task">
+      <input id="newTitle" placeholder="عنوان المهمة">
+      <input id="newDesc" placeholder="تفاصيل المهمة">
+      <select id="newStatus">
         <option>جاري العمل</option>
         <option>تم</option>
         <option>معلق</option>
@@ -104,18 +119,17 @@
       <button onclick="addTask()">➕ إضافة</button>
     </div>
 
-    <div class="kanban">
-      <div class="column" id="todo">
-        <h3>📌 جاري العمل</h3>
-      </div>
-      <div class="column" id="done">
-        <h3>✅ تم</h3>
-      </div>
-      <div class="column" id="hold">
-        <h3>⏸️ معلق</h3>
-      </div>
-    </div>
-  
+    <table class="task-table">
+      <thead>
+        <tr>
+          <th>العنوان</th>
+          <th>التفاصيل</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"></tbody>
+    </table>
   </main>
 
   <script>
@@ -127,73 +141,62 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function renderTask(docId, data) {
-      const task = document.createElement('div');
-      task.className = 'task';
-      task.innerHTML = `
-        <b>${data.title}</b><br>
-        <p>${data.desc}</p>
-        <button onclick="changeStatus('${docId}')">🔁 حالة</button>
-        <button onclick="editTask('${docId}')">✏️ تعديل</button>
-        <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
-      `;>🔁 حالة</button>
-        <button onclick="editTask('${docId}')">✏️ تعديل</button>
-        <button onclick="deleteTask('${docId}')">🗑️ حذف</button>
-      `;
-
-      const columnMap = {
-        'جاري العمل': 'todo',
-        'تم': 'done',
-        'معلق': 'hold'
-      };
-
-      const col = document.getElementById(columnMap[data.status] || 'todo');
-      if (col) col.appendChild(task);
-    }
-
     function loadTasks() {
-      document.getElementById('todo').innerHTML = '<h3>📌 جاري العمل</h3>';
-      document.getElementById('done').innerHTML = '<h3>✅ تم</h3>';
-      document.getElementById('hold').innerHTML = '<h3>⏸️ معلق</h3>';
+      const body = document.getElementById('taskBody');
+      body.innerHTML = '';
       db.collection('tasks').get().then(snapshot => {
-        snapshot.forEach(doc => renderTask(doc.id, doc.data()));
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${data.title}</td>
+            <td>${data.desc}</td>
+            <td>${data.status}</td>
+            <td>
+              <button onclick="editTask('${doc.id}')">✏️</button>
+              <button onclick="deleteTask('${doc.id}')">🗑️</button>
+              <button onclick="changeStatus('${doc.id}')">🔁</button>
+            </td>
+          `;
+          body.appendChild(row);
+        });
       });
     }
 
-    function editTask(id) {
-      const newTitle = prompt("العنوان الجديد:");
-      const newDesc = prompt("تفاصيل جديدة:");
-      const newStatus = prompt("الحالة الجديدة (جاري العمل، تم، معلق):");
-      if (newTitle && newDesc && newStatus) {
-        db.collection('tasks').doc(id).update({ title: newTitle, desc: newDesc, status: newStatus }).then(loadTasks);
-      }
-    }
-
-    function deleteTask(id) {
-      if (confirm("هل تريد حذف المهمة نهائيًا؟")) {
-        db.collection('tasks').doc(id).delete().then(loadTasks);
-      }
-    }
-
-    loadTasks();
-
     function addTask() {
-      const title = document.getElementById('newTitle').value.trim();
-      const desc = document.getElementById('newDesc').value.trim();
+      const title = document.getElementById('newTitle').value;
+      const desc = document.getElementById('newDesc').value;
       const status = document.getElementById('newStatus').value;
-      if (!title || !desc) return alert('يرجى تعبئة العنوان والتفاصيل');
-      db.collection('tasks').add({ title, desc, status, author: 'مدير' }).then(() => {
+      if (!title || !desc) return alert("يرجى تعبئة كل الحقول");
+      db.collection('tasks').add({ title, desc, status }).then(() => {
         document.getElementById('newTitle').value = '';
         document.getElementById('newDesc').value = '';
         loadTasks();
       });
     }
 
+    function editTask(id) {
+      const newTitle = prompt("العنوان الجديد:");
+      const newDesc = prompt("تفاصيل جديدة:");
+      const newStatus = prompt("الحالة:");
+      if (newTitle && newDesc && newStatus) {
+        db.collection('tasks').doc(id).update({ title: newTitle, desc: newDesc, status: newStatus }).then(loadTasks);
+      }
+    }
+
+    function deleteTask(id) {
+      if (confirm("هل أنت متأكد من الحذف؟")) {
+        db.collection('tasks').doc(id).delete().then(loadTasks);
+      }
+    }
+
     function changeStatus(id) {
-      const newStatus = prompt("أدخل الحالة الجديدة (جاري العمل، تم، معلق):");
+      const newStatus = prompt("أدخل الحالة الجديدة:");
       if (!newStatus) return;
       db.collection('tasks').doc(id).update({ status: newStatus }).then(loadTasks);
     }
+
+    loadTasks();
   </script>
 </body>
 </html>
